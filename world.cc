@@ -2,6 +2,10 @@
 #include <GL/gl.h>
 #include <GL/glu.h>
 
+#include <string>
+#include <fstream>
+#include <streambuf>
+
 #define GLM_ENABLE_EXPERIMENTAL
 
 #include <glm/glm.hpp>
@@ -19,149 +23,19 @@
 
 using namespace std;
 
-const char *gourd_vs_src = R"(
-	#version 420 core
-	layout(location=0) in vec3 vpos;
-	layout(location=1) in vec3 vnor;
-	layout(location=2) in vec3 vtc;
-	uniform mat4 view;
-	uniform vec3 eye;
-	uniform vec3 light;
-	uniform float kd;
-	uniform vec3 dcol;
-	uniform float ks;
-	uniform vec3 scol;
-	uniform float ns;
-	out SDATA
-	{
-		vec3 color;
-		vec3 tc;
-	} sdata;
-	void main()
-	{
-		vec3 N = normalize(vnor);
-		vec3 L = normalize(light-vpos);
-		vec3 V = normalize(eye-vpos);
-		sdata.color = dcol*vec3(0.1);
-		float NL = max(dot(N,L),0);
-		if (NL>0)
-		{
-			sdata.color += kd*dcol*NL;
-			vec3 R = reflect(-L,N);
-			float RV = max(dot(R,V),0);
-			if (RV>0)
-				sdata.color += ks*scol*pow(RV,ns);
-		}
-		sdata.tc = vtc;
-		gl_Position = view*vec4(vpos,1.0);
-	}
-)";
-GLuint gourd_vs;
-
-const char *gourd_fs_src = R"(
-	#version 420 core
-	layout(binding=0) uniform sampler2D tex;
-	uniform bool texflg;
-	uniform bool envflg;
-	in SDATA
-	{
-		vec3 color;
-		vec3 tc;
-	} sdata;
-	out vec4 color;
-	void main()
-	{
-		color = vec4(sdata.color,1.0);
-		if (texflg)
-			color = texture(tex,sdata.tc.st);
-	}
-)";
-GLuint gourd_fs;
-
+// gourd program id
 GLuint gourd_prog;
 
-const char *phong_vs_src = R"(
-	#version 420 core
-	layout(location=0) in vec3 vpos;
-	layout(location=1) in vec3 vnor;
-	layout(location=2) in vec3 vtc;
-	uniform mat4 view;
-	uniform vec3 eye;
-	uniform vec3 light;
-	out SDATA
-	{
-		vec3 N;
-		vec3 L;
-		vec3 V;
-		vec3 tc;
-	} sdata;
-	void main()
-	{
-		sdata.N = vnor;
-		sdata.L = normalize(light-vpos);
-		sdata.V = normalize(eye-vpos);
-		sdata.tc = vtc;
-		gl_Position = view*vec4(vpos,1.0);
-	}
-)";
-GLuint phong_vs;
+// gourd shaders path
+const char gourd_vs_path[] = "shaders/gourd.vert";
+const char gourd_fs_path[] = "shaders/gourd.frag";
 
-const char *phong_fs_src = R"(
-	#version 420 core
-	layout(binding=0) uniform sampler2D tex;
-	layout(binding=1) uniform sampler2D env;
-	uniform float kd;
-	uniform vec3 dcol;
-	uniform float ks;
-	uniform vec3 scol;
-	uniform float ns;
-	uniform bool texflg;
-	uniform bool envflg;
-	in SDATA
-	{
-		vec3 N;
-		vec3 L;
-		vec3 V;
-		vec3 tc;
-	} sdata;
-	out vec3 color;
-	void main()
-	{
-		const float pi=3.14159265358979323846;
-		vec3 N = normalize(sdata.N);
-		vec3 L = normalize(sdata.L);
-		vec3 V = normalize(sdata.V);
-		color = dcol*vec3(0.1);
-		float NL = max(dot(N,L),0);
-		if (NL>0)
-		{
-			vec3 rd = dcol;
-			if (texflg)
-				rd = texture(tex,sdata.tc.st).rgb;
-			color += kd*rd*NL;
-			vec3 rs = vec3(0);
-			vec3 R = reflect(-L,N);
-			float RV = max(dot(R,V),0);
-			if (RV>0)
-			{
-				rs = scol*pow(RV,ns);
-				color += ks*rs*NL;
-			}
-			if (envflg)
-			{
-				vec3 M = reflect(-V,N);
-				vec2 ec;
-				float l = length(M.xy);
-				ec.s = 0.5 + (1/(2*pi))*atan(-M.y,M.x);
-				ec.t = 0.5 + (1/(  pi))*atan(-M.z,l);
-				color += ks*texture(env,ec).rgb;
-			}
-		}
-	}
-)";
-GLuint phong_fs;
-
+// phong program id
 GLuint phong_prog;
+
+// phong shaders path
+const char phong_vs_path[] = "shaders/phong.vert";
+const char phong_fs_path[] = "shaders/phong.frag";
 
 glm::mat4 view;
 GLuint view_loc;
@@ -174,7 +48,7 @@ GLuint ks_loc;
 GLuint scol_loc;
 GLuint ns_loc;
 
-bool world_fill = false;
+bool world_fill = true;
 bool world_pps = false;
 bool world_tex = false;
 GLuint texflg_loc;
@@ -197,10 +71,95 @@ void glcheck(const string &msg) {
         cout << msg << " error: " << gluErrorString(err) << endl;
 }
 
+/**
+ * Load a shader from a file
+ * @param file_path Path of the shader
+ * @return Shader as string
+ */
+string readShaderFromFile(const char file_path[]) {
+    // Read file
+    ifstream t(file_path);
+
+    // Check if file is correctly opened
+    if (t.is_open()) {
+        string str((istreambuf_iterator<char>(t)), istreambuf_iterator<char>());
+        return str;
+    } else {
+        cerr << "Error loading the shader file: " << file_path << endl;
+        return "";
+    }
+}
+
+/**
+ * Create GLProgram and return it
+ * @param vertex_shader_file_path Vertex shader file path
+ * @param fragment_shader_file_path  Fragment shader file path
+ * @return OpenGL program on succeed and o otherwise
+ */
+GLuint createGLProgram(const char vertex_shader_file_path[], const char fragment_shader_file_path[]) {
+    // Load vertex shader
+    string vertex_shader_src = readShaderFromFile(vertex_shader_file_path);
+    const char *vertex_shader_src_char = vertex_shader_src.c_str();
+
+    // Load and compile vertex shader
+    GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER);
+    glShaderSource(vertex_shader, 1, &vertex_shader_src_char, nullptr);
+    glCompileShader(vertex_shader);
+
+    // Check if shader have been correctly compiled
+    GLint compile_error_vs;
+    glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, &compile_error_vs);
+
+    if (compile_error_vs != GL_TRUE) {
+        cerr << "Error compiling the vertex shader file: " << vertex_shader_file_path << endl;
+    }
+
+    // Load fragment shader
+    string fragment_shader_src = readShaderFromFile(fragment_shader_file_path);
+    const char *fragment_shader_src_char = fragment_shader_src.c_str();
+
+    // Load and compile fragment shader
+    GLuint fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(fragment_shader, 1, &fragment_shader_src_char, nullptr);
+    glCompileShader(fragment_shader);
+
+    // Check if shader have been correctly compiled
+    GLint compile_error_fs;
+    glGetShaderiv(fragment_shader, GL_COMPILE_STATUS, &compile_error_fs);
+
+    if (compile_error_fs != GL_TRUE) {
+        cerr << "Error compiling the fragment shader file: " << fragment_shader_file_path << endl;
+    }
+
+    // Compile the program
+    GLuint opengl_program = glCreateProgram();
+    glAttachShader(opengl_program, vertex_shader);
+    glAttachShader(opengl_program, fragment_shader);
+    glLinkProgram(opengl_program);
+
+    // Check if program have been correctly linked
+    GLint link_error_program;
+    glGetProgramiv(opengl_program, GL_LINK_STATUS, &link_error_program);
+
+    if (link_error_program != GL_TRUE) {
+        cerr << "Error linking the program with vertex shader file: " << vertex_shader_file_path << endl;
+
+        // Delete the program
+        glDeleteProgram(opengl_program);
+        opengl_program = 0;
+    }
+
+    // Delete shader files
+    glDeleteShader(vertex_shader);
+    glDeleteShader(fragment_shader);
+
+    return opengl_program;
+}
+
 void world_init() {
     glm::mat4 xf = glm::rotate(glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 
-    obj.load("assets/cube.obj");
+    obj.load("assets/teapot.obj");
 //	obj.load("../model/bb8.obj");
 //	obj.load("../model/teapot.obj",xf);
 //	obj.load("../model/dragon.obj",xf);
@@ -236,31 +195,19 @@ void world_init() {
     glBufferData(GL_ARRAY_BUFFER, vao_sz * sizeof(glm::vec3), obj.texcoord().data(), GL_STATIC_DRAW);
     glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), NULL);
 
-    phong_vs = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(phong_vs, 1, &phong_vs_src, NULL);
-    glCompileShader(phong_vs);
+    // Create phong program
+    phong_prog = createGLProgram(phong_vs_path, phong_fs_path);
 
-    phong_fs = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(phong_fs, 1, &phong_fs_src, NULL);
-    glCompileShader(phong_fs);
+    if (phong_prog == 0) {
+        cerr << "Program was not created for shader: phong" << endl;
+    }
 
-    phong_prog = glCreateProgram();
-    glAttachShader(phong_prog, phong_vs);
-    glAttachShader(phong_prog, phong_fs);
-    glLinkProgram(phong_prog);
+    // Create gourd program
+    gourd_prog = createGLProgram(gourd_vs_path, gourd_fs_path);
 
-    gourd_vs = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(gourd_vs, 1, &gourd_vs_src, NULL);
-    glCompileShader(gourd_vs);
-
-    gourd_fs = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(gourd_fs, 1, &gourd_fs_src, NULL);
-    glCompileShader(gourd_fs);
-
-    gourd_prog = glCreateProgram();
-    glAttachShader(gourd_prog, gourd_vs);
-    glAttachShader(gourd_prog, gourd_fs);
-    glLinkProgram(gourd_prog);
+    if (gourd_prog == 0) {
+        cerr << "Program was not created for shader: gourd" << endl;
+    }
 
     glClearColor(0, 0, 0, 0);
 

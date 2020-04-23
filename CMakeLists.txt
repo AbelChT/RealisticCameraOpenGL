@@ -13,6 +13,7 @@ find_package(PNG REQUIRED)
 # Find required packages to load Assets
 find_package(assimp REQUIRED)
 
-add_executable(TestingOpenGL main.cc world.h world.cc obj.h obj.cc png.h png.cc)
+# add_executable(TestingOpenGL main.cc world.h world.cc obj.h obj.cc png.h png.cc main_assimp_test.cpp)
+add_executable(TestingOpenGL main_assimp_test.cpp)
 
 target_link_libraries(TestingOpenGL OpenGL::GL OpenGL::GLU glfw glm assimp GLEW PNG::PNG)

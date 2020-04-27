@@ -5,7 +5,7 @@
 #include <assimp/scene.h>           // Output data structure
 #include <assimp/postprocess.h>     // Post processing flags
 #include <iostream>
-#include "SceneDescription.h"
+#include "../SceneDescription.h"
 
 using namespace std;
 

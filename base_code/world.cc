@@ -157,7 +157,7 @@ GLuint createGLProgram(const char vertex_shader_file_path[], const char fragment
 }
 
 void world_init() {
-    glm::mat4 xf = glm::rotate(glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+    // glm::mat4 xf = glm::rotate(glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 
     obj.load("assets/teapot.obj");
 //	obj.load("../model/bb8.obj");

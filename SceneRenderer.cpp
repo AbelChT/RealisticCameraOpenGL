@@ -57,6 +57,12 @@ void initSceneRenderer(const SceneDescription &sceneDescription) {
     // Load lights
     light = sceneDescription.lights.front().position;
 
+
+    // Configure OpenGL
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    glEnable(GL_DEPTH_TEST);
+    glDisable(GL_CULL_FACE);
+
 }
 
 void reshapeScene(int w, int h) {
@@ -86,15 +92,9 @@ void renderFrame(int w, int h) {
     glm::mat4 view = pers * camera;
 
 //	light = axis;
-//     glm::vec3 light = eye;
+//  glm::vec3 light = eye;
 //	light = glm::normalize(glm::vec3(1.0f));
-//	light = glm::normalize(glm::vec3(4.0f));
-
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    glEnable(GL_DEPTH_TEST);
-    glDisable(GL_CULL_FACE);
-
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+//	light = glm::normalize(glm::vec3(4.0f))
 
     // Use Gourd
     glUseProgram(gourdProgramId);
@@ -123,7 +123,23 @@ void renderFrame(int w, int h) {
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
 
-    glDrawArrays(GL_TRIANGLES, 0, vertexArrayObjectSize);
+    const int numberOfBokehIterations = 10;
+    const float movementRange = 0.4;
+
+    float axisPosition = world_ro - movementRange / 2;
+
+    for (int i = 0; i < numberOfBokehIterations; ++i) {
+        glm::vec3 eyeInternal = to + axisPosition * axis;
+        glUniform3fv(eye_loc, 1, glm::value_ptr(eyeInternal));
+
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        glDrawArrays(GL_TRIANGLES, 0, vertexArrayObjectSize);
+        glAccum(GL_ACCUM, 1.0 / (float)numberOfBokehIterations);
+
+        axisPosition += movementRange / (float)numberOfBokehIterations;
+    }
+    glAccum(GL_RETURN, 1.0);
 
 //	glFlush();
 

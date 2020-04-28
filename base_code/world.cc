@@ -291,7 +291,8 @@ void world_display(int w, int h) {
     view = pers * camera;
 
 //	light = axis;
-    light = eye;
+//    light = eye;
+    light = glm::normalize(glm::vec3(1.0f));
 //	light = glm::normalize(glm::vec3(1.0f));
 //	light = glm::normalize(glm::vec3(4.0f));
 

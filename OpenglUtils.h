@@ -2,8 +2,8 @@
 // Created by abel on 27/4/20.
 //
 
-#ifndef TESTINGOPENGL_OPENGL_UTILS_H
-#define TESTINGOPENGL_OPENGL_UTILS_H
+#ifndef TESTINGOPENGL_OPENGLUTILS_H
+#define TESTINGOPENGL_OPENGLUTILS_H
 
 #include <string>
 #include <fstream>
@@ -25,4 +25,4 @@ std::string readShaderFromFile(const char file_path[]);
  */
 GLuint createGLProgram(const char vertex_shader_file_path[], const char fragment_shader_file_path[]);
 
-#endif //TESTINGOPENGL_OPENGL_UTILS_H
+#endif //TESTINGOPENGL_OPENGLUTILS_H

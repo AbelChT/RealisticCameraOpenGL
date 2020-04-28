@@ -5,9 +5,31 @@
 #include <GLFW/glfw3.h>
 #include <array>
 #include <iostream>
+#include "SceneDescription.h"
+#include "SceneRenderer.h"
+#include "base_code/obj.h"
 
 void initEngine() {
+    // Load Scene
+    // TODO: Change to load with assimp
+    OBJ obj;
+    obj.load("assets/teapot.obj");
 
+    // Scene description
+    SceneDescription sceneDescription;
+
+    // Add meshes
+    SceneMesh sceneMesh;
+    sceneMesh.vertices = obj.faces();
+    sceneMesh.normals = obj.normals();
+    sceneDescription.meshes.push_back(sceneMesh);
+
+    // Add lights
+    SceneLight sceneLight;
+    sceneLight.position = glm::normalize(glm::vec3(1.0f));
+    sceneDescription.lights.push_back(sceneLight)
+
+    // Init engine
 }
 
 void callbackOpenGLReshape(GLFWwindow *win, int w, int h) {

@@ -1,7 +1,7 @@
 //
 // Created by abel on 27/4/20.
 //
-#include "opengl_utils.h"
+#include "OpenglUtils.h"
 
 /**
  * Load a shader from a file

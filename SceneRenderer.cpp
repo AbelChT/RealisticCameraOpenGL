@@ -19,7 +19,7 @@ glm::vec3 light;
 const char gourdVsPath[] = "shaders/my_gourd.vert";
 const char gourdFsPath[] = "shaders/my_gourd.frag";
 
-void init_scene_renderer(const SceneDescription &sceneDescription) {
+void initSceneRenderer(const SceneDescription &sceneDescription) {
     // TODO Warning: From now we are only working with one mesh of the scene and one light
     // Generate and bind vertex array
     glGenVertexArrays(1, &vertexArrayObject);
@@ -59,11 +59,11 @@ void init_scene_renderer(const SceneDescription &sceneDescription) {
 
 }
 
-void reshape_scene(int w, int h) {
+void reshapeScene(int w, int h) {
     glViewport(0, 0, w, h);
 }
 
-void render_frame(int w, int h) {
+void renderFrame(int w, int h) {
     float world_ph = 0.0;
     float world_th = 30.0;
     float world_ro = 1.0;
@@ -122,7 +122,6 @@ void render_frame(int w, int h) {
     glBindVertexArray(vertexArrayObject);
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
-    glEnableVertexAttribArray(2);
 
     glDrawArrays(GL_TRIANGLES, 0, vertexArrayObjectSize);
 

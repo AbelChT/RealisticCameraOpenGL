@@ -27,15 +27,17 @@ void initEngine() {
     // Add lights
     SceneLight sceneLight;
     sceneLight.position = glm::normalize(glm::vec3(1.0f));
-    sceneDescription.lights.push_back(sceneLight)
+    sceneDescription.lights.push_back(sceneLight);
 
     // Init engine
+    initSceneRenderer(sceneDescription);
+
 }
 
 void callbackOpenGLReshape(GLFWwindow *win, int w, int h) {
     glfwMakeContextCurrent(win);
     std::cout << "Callback: Refresh" << std::endl;
-    // world_reshape(w, h);
+    reshapeScene(w, h);
 }
 
 void callbackOpenGLDisplay(GLFWwindow *win) {
@@ -45,7 +47,7 @@ void callbackOpenGLDisplay(GLFWwindow *win) {
 
     glfwMakeContextCurrent(win);
 
-    // world_display(w, h);
+    renderFrame(w, h);
 
     glfwSwapBuffers(win);
 }

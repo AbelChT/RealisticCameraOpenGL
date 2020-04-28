@@ -12,10 +12,10 @@
 #include "SceneDescription.h"
 #include "OpenglUtils.h"
 
-void init_scene_renderer(const SceneDescription &sceneDescription);
+void initSceneRenderer(const SceneDescription &sceneDescription);
 
-void reshape_scene(int w, int h);
+void reshapeScene(int w, int h);
 
-void render_frame(int w, int h);
+void renderFrame(int w, int h);
 
 #endif //TESTINGOPENGL_SCENERENDERER_H

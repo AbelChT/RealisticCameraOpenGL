@@ -97,7 +97,7 @@ void renderFrame(int w, int h) {
     // light = glm::normalize(glm::vec3(1.0f));
     // light = glm::normalize(glm::vec3(4.0f))
 
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // Use Gourd
     glUseProgram(gourdProgramId);
@@ -135,15 +135,12 @@ void renderFrame(int w, int h) {
 
     // glUniform3fv(eye_loc, 1, glm::value_ptr(eyeInternal));
 
+    glUniform3f(dcol_loc, 12 / 255.0, 75 / 255.0, 50 / 255.0);
     glDrawArrays(GL_TRIANGLES, 0, vertexArrayObjectSize);
 
 
     glDisableVertexAttribArray(0);
     glDisableVertexAttribArray(1);
-
-    // glBindVertexArray(0);
-
-    // glFlush();
 
 }
 
@@ -176,6 +173,8 @@ void renderFrameWithDeepOfField(int w, int h) {
     // light = glm::normalize(glm::vec3(1.0f));
     // light = glm::normalize(glm::vec3(4.0f))
 
+    glClear(GL_DEPTH_BUFFER_BIT);
+
     // Use Gourd
     glUseProgram(gourdProgramId);
 
@@ -203,47 +202,32 @@ void renderFrameWithDeepOfField(int w, int h) {
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
 
-    const int numberOfBokehIterations = 10;
     const float movementRange = 0.4;
 
     float axisPosition = world_ro - movementRange / 2;
 
-    // glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
     glm::vec3 eyeInternal = to + axisPosition * axis;
     // std::cout << eyeInternal.x << " " << eyeInternal.y << " " << eyeInternal.z << std::endl;
 
-    glUniform3fv(eye_loc, 1, glm::value_ptr(eyeInternal));
+    // glUniform3fv(eye_loc, 1, glm::value_ptr(eyeInternal));
 
+    glClear(GL_ACCUM_BUFFER_BIT);
+
+    glClear(GL_COLOR_BUFFER_BIT);
+
+//    glUniform3f(dcol_loc, 212 / 255.0, 75 / 255.0, 55 / 255.0);
+//    glDrawArrays(GL_TRIANGLES, 0, vertexArrayObjectSize);
+//    glAccum(GL_LOAD, 0.5);
+
+//    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glUniform3f(dcol_loc, 12 / 255.0, 75 / 255.0, 50 / 255.0);
     glDrawArrays(GL_TRIANGLES, 0, vertexArrayObjectSize);
+//    glAccum(GL_ACCUM, 0.5);
+    glAccum(GL_LOAD, 0.5);
+    glAccum(GL_RETURN, 0.5);
 
-    // glBindVertexArray(0);
 
-    // glFlush();
-
-
-//    glClear(GL_ACCUM_BUFFER_BIT);
-//
-//
-//    for (int i = 0; i < numberOfBokehIterations; ++i) {
-//        glm::vec3 eyeInternal = to + axisPosition * axis;
-//        // std::cout << eyeInternal.x << " " << eyeInternal.y << " " << eyeInternal.z << std::endl;
-//
-//        glUniform3fv(eye_loc, 1, glm::value_ptr(eyeInternal));
-//
-//        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-//
-//        glDrawArrays(GL_TRIANGLES, 0, vertexArrayObjectSize);
-//
-//        //
-//        // glDrawBuffer(GL_BACK);
-//
-//        glAccum(GL_ACCUM, 1.0 / (float) numberOfBokehIterations);
-//
-//        axisPosition += movementRange / (float) numberOfBokehIterations;
-//    }
-//    glAccum(GL_RETURN, 1.0);
-
-//	glFlush();
+    glDisableVertexAttribArray(0);
+    glDisableVertexAttribArray(1);
 
 }

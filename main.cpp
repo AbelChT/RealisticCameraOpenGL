@@ -51,10 +51,10 @@ void callbackOpenGLDisplay(GLFWwindow *win) {
 
     glfwMakeContextCurrent(win);
 
-//    if (!style)
-    renderFrame(w, h);
-//    else
-//        renderFrameWithDeepOfField(w, h);
+    if (!style)
+        renderFrame(w, h);
+    else
+        renderFrameWithDeepOfField(w, h);
 
     glfwSwapBuffers(win);
 }
@@ -118,7 +118,7 @@ int main(int argc, char *argv[]) {
     // Set callbacks for display and reshape
     glfwSetFramebufferSizeCallback(win, callbackOpenGLReshape);
     glfwSetWindowRefreshCallback(win, callbackOpenGLDisplay);
-    // glfwSetKeyCallback(win, callbackOpenGLKeyboard);
+     glfwSetKeyCallback(win, callbackOpenGLKeyboard);
 
     // Wait until program ends
     while (!glfwWindowShouldClose(win))

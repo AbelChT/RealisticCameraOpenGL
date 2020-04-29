@@ -97,6 +97,8 @@ void renderFrame(int w, int h) {
     // light = glm::normalize(glm::vec3(1.0f));
     // light = glm::normalize(glm::vec3(4.0f))
 
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+
     // Use Gourd
     glUseProgram(gourdProgramId);
 
@@ -128,14 +130,18 @@ void renderFrame(int w, int h) {
 
     float axisPosition = world_ro - movementRange / 2;
 
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_ACCUM_BUFFER_BIT);
-
     glm::vec3 eyeInternal = to + axisPosition * axis;
     // std::cout << eyeInternal.x << " " << eyeInternal.y << " " << eyeInternal.z << std::endl;
 
-    glUniform3fv(eye_loc, 1, glm::value_ptr(eyeInternal));
+    // glUniform3fv(eye_loc, 1, glm::value_ptr(eyeInternal));
 
     glDrawArrays(GL_TRIANGLES, 0, vertexArrayObjectSize);
+
+
+    glDisableVertexAttribArray(0);
+    glDisableVertexAttribArray(1);
+
+    // glBindVertexArray(0);
 
     // glFlush();
 
@@ -202,7 +208,7 @@ void renderFrameWithDeepOfField(int w, int h) {
 
     float axisPosition = world_ro - movementRange / 2;
 
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_ACCUM_BUFFER_BIT);
+    // glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glm::vec3 eyeInternal = to + axisPosition * axis;
     // std::cout << eyeInternal.x << " " << eyeInternal.y << " " << eyeInternal.z << std::endl;
@@ -210,6 +216,8 @@ void renderFrameWithDeepOfField(int w, int h) {
     glUniform3fv(eye_loc, 1, glm::value_ptr(eyeInternal));
 
     glDrawArrays(GL_TRIANGLES, 0, vertexArrayObjectSize);
+
+    // glBindVertexArray(0);
 
     // glFlush();
 

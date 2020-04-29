@@ -24,6 +24,8 @@ void initEngine() {
     sceneMesh.normals = obj.normals();
     sceneDescription.meshes.push_back(sceneMesh);
 
+    std::cout << "Faces " << obj.faces().size() << std::endl;
+
     // Add lights
     SceneLight sceneLight;
     sceneLight.position = glm::normalize(glm::vec3(1.0f));
@@ -49,10 +51,10 @@ void callbackOpenGLDisplay(GLFWwindow *win) {
 
     glfwMakeContextCurrent(win);
 
-    if (!style)
-        renderFrame(w, h);
-    else
-        renderFrameWithDeepOfField(w, h);
+//    if (!style)
+    renderFrame(w, h);
+//    else
+//        renderFrameWithDeepOfField(w, h);
 
     glfwSwapBuffers(win);
 }
@@ -116,7 +118,7 @@ int main(int argc, char *argv[]) {
     // Set callbacks for display and reshape
     glfwSetFramebufferSizeCallback(win, callbackOpenGLReshape);
     glfwSetWindowRefreshCallback(win, callbackOpenGLDisplay);
-    glfwSetKeyCallback(win, callbackOpenGLKeyboard);
+    // glfwSetKeyCallback(win, callbackOpenGLKeyboard);
 
     // Wait until program ends
     while (!glfwWindowShouldClose(win))

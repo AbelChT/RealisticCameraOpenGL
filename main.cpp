@@ -40,6 +40,8 @@ void callbackOpenGLReshape(GLFWwindow *win, int w, int h) {
     reshapeScene(w, h);
 }
 
+bool style = false;
+
 void callbackOpenGLDisplay(GLFWwindow *win) {
     std::cout << "Callback: Display" << std::endl;
     int w, h;
@@ -47,9 +49,24 @@ void callbackOpenGLDisplay(GLFWwindow *win) {
 
     glfwMakeContextCurrent(win);
 
-    renderFrame(w, h);
+    if (!style)
+        renderFrame(w, h);
+    else
+        renderFrameWithDeepOfField(w, h);
 
     glfwSwapBuffers(win);
+}
+
+void callbackOpenGLKeyboard(GLFWwindow *win, int key, int s, int act, int mod) {
+    if (act == GLFW_RELEASE)
+        return;
+
+    switch (key) {
+        case GLFW_KEY_R:
+            style = !style;
+            callbackOpenGLDisplay(win);
+            break;
+    }
 }
 
 int main(int argc, char *argv[]) {
@@ -99,6 +116,7 @@ int main(int argc, char *argv[]) {
     // Set callbacks for display and reshape
     glfwSetFramebufferSizeCallback(win, callbackOpenGLReshape);
     glfwSetWindowRefreshCallback(win, callbackOpenGLDisplay);
+    glfwSetKeyCallback(win, callbackOpenGLKeyboard);
 
     // Wait until program ends
     while (!glfwWindowShouldClose(win))

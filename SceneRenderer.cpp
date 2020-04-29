@@ -34,7 +34,6 @@ void initSceneRenderer(const SceneDescription &sceneDescription) {
                  sceneDescription.meshes.begin()->vertices.data(), GL_STATIC_DRAW);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), nullptr);
 
-
     // Associate normals to the VAO
     GLuint vertexNormalsBufferObject;
     glGenBuffers(1, &vertexNormalsBufferObject);
@@ -53,10 +52,10 @@ void initSceneRenderer(const SceneDescription &sceneDescription) {
     }
 
     glClearColor(0, 0, 0, 0);
+    glClearAccum(0, 0, 0, 0);
 
     // Load lights
     light = sceneDescription.lights.front().position;
-
 
     // Configure OpenGL
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -70,6 +69,8 @@ void reshapeScene(int w, int h) {
 }
 
 void renderFrame(int w, int h) {
+    std::cout << "renderFrame" << std::endl;
+
     float world_ph = 0.0;
     float world_th = 30.0;
     float world_ro = 1.0;
@@ -91,10 +92,83 @@ void renderFrame(int w, int h) {
 
     glm::mat4 view = pers * camera;
 
-//	light = axis;
-//  glm::vec3 light = eye;
-//	light = glm::normalize(glm::vec3(1.0f));
-//	light = glm::normalize(glm::vec3(4.0f))
+    // light = axis;
+    // glm::vec3 light = eye;
+    // light = glm::normalize(glm::vec3(1.0f));
+    // light = glm::normalize(glm::vec3(4.0f))
+
+    // Use Gourd
+    glUseProgram(gourdProgramId);
+
+    GLuint eye_loc = glGetUniformLocation(gourdProgramId, "eye");
+    GLuint view_loc = glGetUniformLocation(gourdProgramId, "view");
+    GLuint light_loc = glGetUniformLocation(gourdProgramId, "light");
+    GLuint kd_loc = glGetUniformLocation(gourdProgramId, "kd");
+    GLuint dcol_loc = glGetUniformLocation(gourdProgramId, "dcol");
+    GLuint ks_loc = glGetUniformLocation(gourdProgramId, "ks");
+    GLuint scol_loc = glGetUniformLocation(gourdProgramId, "scol");
+    GLuint ns_loc = glGetUniformLocation(gourdProgramId, "ns");
+
+    glUniformMatrix4fv(view_loc, 1, GL_FALSE, glm::value_ptr(view));
+    glUniform3fv(eye_loc, 1, glm::value_ptr(eye));
+    glUniform3fv(light_loc, 1, glm::value_ptr(light));
+    glUniform1f(kd_loc, 0.5f);
+//	glUniform3f(dcol_loc,1.0,1.0,1.0);
+    glUniform3f(dcol_loc, 112 / 255.0, 175 / 255.0, 55 / 255.0);
+    glUniform1f(ks_loc, 0.5f);
+    glUniform3f(scol_loc, 1.0, 1.0, 1.0);
+//	glUniform3f(scol_loc,212/255.0,175/255.0,55/255.0);
+    glUniform1f(ns_loc, 10.0f);
+
+    glBindVertexArray(vertexArrayObject);
+    glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(1);
+
+    const float movementRange = 0.4;
+
+    float axisPosition = world_ro - movementRange / 2;
+
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_ACCUM_BUFFER_BIT);
+
+    glm::vec3 eyeInternal = to + axisPosition * axis;
+    // std::cout << eyeInternal.x << " " << eyeInternal.y << " " << eyeInternal.z << std::endl;
+
+    glUniform3fv(eye_loc, 1, glm::value_ptr(eyeInternal));
+
+    glDrawArrays(GL_TRIANGLES, 0, vertexArrayObjectSize);
+
+    // glFlush();
+
+}
+
+void renderFrameWithDeepOfField(int w, int h) {
+    std::cout << "renderFrameWithDeepOfField" << std::endl;
+
+    float world_ph = 0.0;
+    float world_th = 30.0;
+    float world_ro = 1.0;
+
+    if (h <= 0 || w <= 0) return;
+
+    float aspect = float(w) / float(h);
+
+    glm::mat4 pers = glm::perspective(45.0f, aspect, 0.01f, 1000.0f);
+
+    const float ph = glm::radians(world_ph);
+    const float th = glm::radians(world_th);
+
+    glm::vec3 axis(cos(ph) * cos(th), sin(ph) * cos(th), sin(th));
+
+    glm::vec3 to(0, 0, 0);
+    glm::vec3 eye = to + world_ro * axis;
+    glm::mat4 camera = glm::lookAt(eye, to, glm::vec3(0, 0, 1));
+
+    glm::mat4 view = pers * camera;
+
+    // light = axis;
+    // glm::vec3 light = eye;
+    // light = glm::normalize(glm::vec3(1.0f));
+    // light = glm::normalize(glm::vec3(4.0f))
 
     // Use Gourd
     glUseProgram(gourdProgramId);
@@ -128,18 +202,39 @@ void renderFrame(int w, int h) {
 
     float axisPosition = world_ro - movementRange / 2;
 
-    for (int i = 0; i < numberOfBokehIterations; ++i) {
-        glm::vec3 eyeInternal = to + axisPosition * axis;
-        glUniform3fv(eye_loc, 1, glm::value_ptr(eyeInternal));
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_ACCUM_BUFFER_BIT);
 
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glm::vec3 eyeInternal = to + axisPosition * axis;
+    // std::cout << eyeInternal.x << " " << eyeInternal.y << " " << eyeInternal.z << std::endl;
 
-        glDrawArrays(GL_TRIANGLES, 0, vertexArrayObjectSize);
-        glAccum(GL_ACCUM, 1.0 / (float)numberOfBokehIterations);
+    glUniform3fv(eye_loc, 1, glm::value_ptr(eyeInternal));
 
-        axisPosition += movementRange / (float)numberOfBokehIterations;
-    }
-    glAccum(GL_RETURN, 1.0);
+    glDrawArrays(GL_TRIANGLES, 0, vertexArrayObjectSize);
+
+    // glFlush();
+
+
+//    glClear(GL_ACCUM_BUFFER_BIT);
+//
+//
+//    for (int i = 0; i < numberOfBokehIterations; ++i) {
+//        glm::vec3 eyeInternal = to + axisPosition * axis;
+//        // std::cout << eyeInternal.x << " " << eyeInternal.y << " " << eyeInternal.z << std::endl;
+//
+//        glUniform3fv(eye_loc, 1, glm::value_ptr(eyeInternal));
+//
+//        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+//
+//        glDrawArrays(GL_TRIANGLES, 0, vertexArrayObjectSize);
+//
+//        //
+//        // glDrawBuffer(GL_BACK);
+//
+//        glAccum(GL_ACCUM, 1.0 / (float) numberOfBokehIterations);
+//
+//        axisPosition += movementRange / (float) numberOfBokehIterations;
+//    }
+//    glAccum(GL_RETURN, 1.0);
 
 //	glFlush();
 

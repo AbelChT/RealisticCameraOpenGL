@@ -159,7 +159,7 @@ GLuint createGLProgram(const char vertex_shader_file_path[], const char fragment
 void world_init() {
     // glm::mat4 xf = glm::rotate(glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 
-    obj.load("assets/teapot.obj");
+    obj.load("assets/cube.obj");
 //	obj.load("../model/bb8.obj");
 //	obj.load("../model/teapot.obj",xf);
 //	obj.load("../model/dragon.obj",xf);
@@ -332,6 +332,8 @@ void world_display(int w, int h) {
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
     glEnableVertexAttribArray(2);
+
+    std::cout << eye.x << " " << eye.y << " " << eye.z << std::endl;
 
     glDrawArrays(GL_TRIANGLES, 0, obj.faces().size());
 

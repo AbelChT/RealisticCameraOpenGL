@@ -27,4 +27,6 @@ void renderFrame(int w, int h);
 
 void renderFrameWithDeepOfField(int w, int h);
 
+void renderFrameTexture(int w, int h);
+
 #endif //TESTINGOPENGL_SCENERENDERER_H

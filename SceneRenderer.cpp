@@ -20,9 +20,6 @@ glm::vec3 light;
 const char gourdVsPath[] = "shaders/myGourd.vert";
 const char gourdFsPath[] = "shaders/myGourd.frag";
 
-//// Buffer user for accumulations
-//GLuint accumulatorFrameBufferObject;
-
 // Transfer from texture to the frameBuffer
 GLuint transferProgramId;
 
@@ -69,7 +66,6 @@ void initSceneRenderer(const SceneDescription &sceneDescription) {
     }
 
     glClearColor(0, 0, 0, 0);
-    // glClearAccum(0, 0, 0, 0);
 
     // Load lights
     light = sceneDescription.lights.front().position;
@@ -78,47 +74,6 @@ void initSceneRenderer(const SceneDescription &sceneDescription) {
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     glEnable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
-
-//    // Create buffer to do accumulation. Must be update with each screen resize
-//    int w = 384;
-//    int h = 256;
-
-//    // Save actual user buffers
-//    GLint defaultDrawFboId, defaultReadFboId;
-//    glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &defaultDrawFboId);
-//    glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &defaultReadFboId);
-
-//    // Generate frame buffer to emulate accumulator buffer
-//    glGenFramebuffers(1, &accumulatorFrameBufferObject);
-//    glBindFramebuffer(GL_FRAMEBUFFER, accumulatorFrameBufferObject);
-//
-//    // Generate texture for the accumulator buffer
-//    GLuint accumulatorTexColorBuffer;
-//    glGenTextures(1, &accumulatorTexColorBuffer);
-//    glBindTexture(GL_TEXTURE_2D, accumulatorTexColorBuffer);
-//    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
-//    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-//    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-//    glBindTexture(GL_TEXTURE_2D, 0);
-//
-//    // Attach texture to currently bound frame buffer object
-//    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, accumulatorTexColorBuffer, 0);
-//
-//    GLuint accumulatorRenderBuffer;
-//    glGenRenderbuffers(1, &accumulatorRenderBuffer);
-//    glBindRenderbuffer(GL_RENDERBUFFER, accumulatorRenderBuffer);
-//    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, w, h);
-//    glBindRenderbuffer(GL_RENDERBUFFER, 0);
-//
-//    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, accumulatorRenderBuffer);
-//
-//    // Check if frame buffer created
-//    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-//        std::cerr << "ERROR FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
-//
-//    // Restore previous buffers
-//    glBindFramebuffer(GL_READ_FRAMEBUFFER, defaultReadFboId);
-//    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, defaultDrawFboId);
 
     // Create plane to render texture in the entire screen
     const glm::vec2 screenTextureVertices[] = {
@@ -163,11 +118,11 @@ void initSceneRenderer(const SceneDescription &sceneDescription) {
     if (transferProgramId == 0) {
         std::cerr << "Program was not created for shader: Transfer" << std::endl;
     }
-
 }
 
 void reshapeScene(int w, int h) {
     glViewport(0, 0, w, h);
+    std::cout << w << " " << h << std::endl;
 }
 
 /**
@@ -262,7 +217,10 @@ void accumulateTexturesIntoDefaultFrameBuffer(GLuint accumulatorTexColorBuffer, 
 
 
 void renderFrame(int w, int h) {
-    const int numberOfFrames = 4;
+    std::clock_t c_start = std::clock();
+    auto t_start = std::chrono::high_resolution_clock::now();
+
+    const int numberOfFrames = 16;
     GLuint accumulatorTexColorBuffer;
     glGenTextures(1, &accumulatorTexColorBuffer);
     glActiveTexture(GL_TEXTURE0);
@@ -289,4 +247,15 @@ void renderFrame(int w, int h) {
     accumulateTexturesIntoDefaultFrameBuffer(accumulatorTexColorBuffer, numberOfFrames);
 
     glDeleteTextures(1, &accumulatorTexColorBuffer);
+
+    std::clock_t c_end = std::clock();
+    auto t_end = std::chrono::high_resolution_clock::now();
+
+    // Print used time
+    std::cout << "CPU time used: "
+              << 1000.0 * (c_end-c_start) / CLOCKS_PER_SEC
+              << " ms\n";
+    std::cout << "Wall clock time passed: "
+              << std::chrono::duration_cast<std::chrono::milliseconds>(t_end - t_start).count()
+              << " ms\n";
 }

@@ -27,8 +27,8 @@ const char gourdFsPath[] = "shaders/my_gourd.frag";
 GLuint transferProgramId;
 
 // Transfer shader path
-const char accumulateVsPath[] = "shaders/accumulate.vert";
-const char accumulateFsPath[] = "shaders/accumulate.frag";
+const char accumulateVsPath[] = "shaders/sum16Textures.vert";
+const char accumulateFsPath[] = "shaders/sum16Textures.frag";
 
 // screen texture VAO
 GLuint screenTextureVAO;
@@ -190,11 +190,6 @@ void renderFrameIntoDefaultFrameBuffer(int w, int h, float world_ro = 1.0) {
 
     glm::vec3 to(0, 0, 0);
 
-    // light = axis;
-    // glm::vec3 light = eye;
-    // light = glm::normalize(glm::vec3(1.0f));
-    // light = glm::normalize(glm::vec3(4.0f))
-
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // Use Gourd
@@ -209,31 +204,19 @@ void renderFrameIntoDefaultFrameBuffer(int w, int h, float world_ro = 1.0) {
     GLuint scol_loc = glGetUniformLocation(gourdProgramId, "scol");
     GLuint ns_loc = glGetUniformLocation(gourdProgramId, "ns");
 
-    // glUniform3fv(eye_loc, 1, glm::value_ptr(eye));
     glUniform3fv(light_loc, 1, glm::value_ptr(light));
     glUniform1f(kd_loc, 0.5f);
-//	glUniform3f(dcol_loc,1.0,1.0,1.0);
     glUniform3f(dcol_loc, 112 / 255.0, 175 / 255.0, 55 / 255.0);
     glUniform1f(ks_loc, 0.5f);
     glUniform3f(scol_loc, 1.0, 1.0, 1.0);
-//	glUniform3f(scol_loc,212/255.0,175/255.0,55/255.0);
     glUniform1f(ns_loc, 10.0f);
 
     glBindVertexArray(vertexArrayObject);
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
 
-    const float movementRange = 0.4;
-
-    // glClear(GL_ACCUM_BUFFER_BIT);
-
     // Cube 1
     float axisPosition = world_ro + 2.0f;
-
-    //glm::vec3 eyeInternal = to + axisPosition * axis;
-    // std::cout << eyeInternal.x << " " << eyeInternal.y << " " << eyeInternal.z << std::endl;
-
-    //3.28873 0 1.89875
 
     glm::vec3 eye = to + axisPosition * axis;
 
@@ -246,37 +229,6 @@ void renderFrameIntoDefaultFrameBuffer(int w, int h, float world_ro = 1.0) {
     glUniform3fv(eye_loc, 1, glm::value_ptr(eye));
     glUniform3f(dcol_loc, 255 / 255.0, 0 / 255.0, 0 / 255.0);
     glDrawArrays(GL_TRIANGLES, 0, vertexArrayObjectSize);
-
-    // glAccum(GL_LOAD, 0.5f);
-//
-//
-    //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    glClear(GL_DEPTH_BUFFER_BIT);
-
-    // Cube 2
-    axisPosition = world_ro + 2.0f;
-
-    //glm::vec3 eyeInternal = to + axisPosition * axis;
-    // std::cout << eyeInternal.x << " " << eyeInternal.y << " " << eyeInternal.z << std::endl;
-
-    //3.28873 0 1.89875
-
-    eye = to + axisPosition * axis;
-
-    camera = glm::lookAt(eye, to, glm::vec3(0, 2, 2));
-
-    view = pers * camera;
-
-    glUniformMatrix4fv(view_loc, 1, GL_FALSE, glm::value_ptr(view));
-
-    glUniform3fv(eye_loc, 1, glm::value_ptr(eye));
-    glUniform3f(dcol_loc, 0 / 255.0, 255 / 255.0, 0 / 255.0);
-    glDrawArrays(GL_TRIANGLES, 0, vertexArrayObjectSize);
-
-    // glAccum(GL_ACCUM, 0.5f);
-//
-    // glAccum(GL_RETURN, 1.0f);
 
     glDisableVertexAttribArray(0);
     glDisableVertexAttribArray(1);
@@ -292,10 +244,10 @@ void accumulateTexturesIntoDefaultFrameBuffer(GLuint accumulatorTexColorBuffer[2
     glEnableVertexAttribArray(1);
 
     // use the color attachment texture as the texture of the quad plane
-    GLuint texLoc = glGetUniformLocation(transferProgramId, "screenTexture0");
+    GLuint texLoc = glGetUniformLocation(transferProgramId, "texture0");
     glUniform1i(texLoc, 0);
 
-    texLoc = glGetUniformLocation(transferProgramId, "screenTexture1");
+    texLoc = glGetUniformLocation(transferProgramId, "texture1");
     glUniform1i(texLoc, 1);
 
     glActiveTexture(GL_TEXTURE0);

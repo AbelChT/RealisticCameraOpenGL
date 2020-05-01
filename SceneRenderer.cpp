@@ -131,17 +131,19 @@ void reshapeScene(int w, int h) {
  * @param h
  * @param world_ro
  */
-void renderFrameIntoDefaultFrameBuffer(int w, int h, float world_ro = 1.0) {
+void renderFrameIntoDefaultFrameBuffer(int w, int h, float cameraDistanceFromO = 1.0, float fieldOfView = 45.0f) {
     std::cout << "renderFrameIntoDefaultFrameBuffer" << std::endl;
 
     float world_ph = 0.0;
     float world_th = 30.0;
 
+    float world_ro = 1.0;
+
     if (h <= 0 || w <= 0) return;
 
     float aspect = float(w) / float(h);
 
-    glm::mat4 pers = glm::perspective(45.0f, aspect, 0.01f, 1000.0f);
+    glm::mat4 pers = glm::perspective(fieldOfView, aspect, 0.01f, 1000.0f);
 
     const float ph = glm::radians(world_ph);
     const float th = glm::radians(world_th);
@@ -171,24 +173,41 @@ void renderFrameIntoDefaultFrameBuffer(int w, int h, float world_ro = 1.0) {
     glUniform3f(scol_loc, 1.0, 1.0, 1.0);
     glUniform1f(ns_loc, 10.0f);
 
+
     glBindVertexArray(vertexArrayObject);
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
 
-    // Cube 1
-    float axisPosition = world_ro + 2.0f;
+    std::cout << axis.x << " " << axis.y << " " << axis.z << std::endl;
 
-    glm::vec3 eye = to + axisPosition * axis;
+    glm::vec3 eye = to + cameraDistanceFromO * axis;
+    glUniform3fv(eye_loc, 1, glm::value_ptr(eye));
 
     glm::mat4 camera = glm::lookAt(eye, to, glm::vec3(0, 0, 1));
 
     glm::mat4 view = pers * camera;
 
-    glUniformMatrix4fv(view_loc, 1, GL_FALSE, glm::value_ptr(view));
 
-    glUniform3fv(eye_loc, 1, glm::value_ptr(eye));
-    glUniform3f(dcol_loc, 255 / 255.0, 0 / 255.0, 0 / 255.0);
+    // Cube 1
+    glm::mat4 viewCube1 = glm::translate(view,glm::vec3(0,0,0));
+
+    glUniformMatrix4fv(view_loc, 1, GL_FALSE, glm::value_ptr(viewCube1));
+    glUniform3f(dcol_loc, 255.0 / 255.0, 30.0 / 255.0, 30.0 / 255.0);
     glDrawArrays(GL_TRIANGLES, 0, vertexArrayObjectSize);
+
+    // Cube 2
+    glm::mat4 viewCube2 = glm::translate(view,glm::vec3(-16,2,0));
+
+    glUniformMatrix4fv(view_loc, 1, GL_FALSE, glm::value_ptr(viewCube2));
+    glUniform3f(dcol_loc, 30.0 / 255.0, 255.0 / 255.0, 30.0 / 255.0);
+    glDrawArrays(GL_TRIANGLES, 0, vertexArrayObjectSize);
+
+//
+//    glUniformMatrix4fv(view_loc, 1, GL_FALSE, glm::value_ptr(view));
+//
+//    glUniform3fv(eye_loc, 1, glm::value_ptr(eye));
+//    glUniform3f(dcol_loc, 255.0 / 255.0, 30.0 / 255.0, 30.0 / 255.0);
+//    glDrawArrays(GL_TRIANGLES, 0, vertexArrayObjectSize);
 
     glDisableVertexAttribArray(0);
     glDisableVertexAttribArray(1);
@@ -216,7 +235,7 @@ void accumulateTexturesIntoDefaultFrameBuffer(GLuint accumulatorTexColorBuffer, 
 }
 
 
-void renderFrame(int w, int h) {
+void renderFrameWithFieldOfView(int w, int h) {
     std::clock_t c_start = std::clock();
     auto t_start = std::chrono::high_resolution_clock::now();
 
@@ -236,8 +255,18 @@ void renderFrame(int w, int h) {
     // Unbind texture
     glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
 
+    float defaultDistanceFromO = 2.4f;
+    float defaultFieldOfView = 45.0f;
+
+    float firstStepDistanceFromO = defaultDistanceFromO;
+    float stepSize = 0.0001f;
+
     for (int i = 0; i < numberOfFrames; i++) {
-        renderFrameIntoDefaultFrameBuffer(w, h, 1.0f + ((float) i) * 0.4f);
+        float distanceFromO = firstStepDistanceFromO + ((float) i) * stepSize;
+        double tan_b = ((defaultDistanceFromO) * tan((defaultFieldOfView * M_PI) / 180.0)) / distanceFromO;
+        float fieldOfView = (float) ((atan(tan_b) * 180.0) / M_PI);
+        std::cout << "Field of view " << fieldOfView << std::endl;
+        renderFrameIntoDefaultFrameBuffer(w, h, distanceFromO, fieldOfView);
         glBindTexture(GL_TEXTURE_2D_ARRAY, accumulatorTexColorBuffer);
         glCopyTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, i, 0, 0, w, h);
     }
@@ -253,9 +282,17 @@ void renderFrame(int w, int h) {
 
     // Print used time
     std::cout << "CPU time used: "
-              << 1000.0 * (c_end-c_start) / CLOCKS_PER_SEC
+              << 1000.0 * (c_end - c_start) / CLOCKS_PER_SEC
               << " ms\n";
     std::cout << "Wall clock time passed: "
               << std::chrono::duration_cast<std::chrono::milliseconds>(t_end - t_start).count()
               << " ms\n";
+}
+
+void renderFrame(int w, int h, bool withFieldOfView) {
+    if (withFieldOfView) {
+        renderFrameWithFieldOfView(w, h);
+    } else {
+        renderFrameIntoDefaultFrameBuffer(w, h, 2.4f);
+    }
 }

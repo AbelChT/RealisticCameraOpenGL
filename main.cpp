@@ -51,10 +51,10 @@ void callbackOpenGLDisplay(GLFWwindow *win) {
 
     glfwMakeContextCurrent(win);
 
-//    if (!style)
-    renderFrame(w, h);
-//    else
-//        renderFrameWithDeepOfField(w, h);
+    if (!style)
+        renderFrame(w, h, false);
+    else
+        renderFrame(w, h, true);
 
     glfwSwapBuffers(win);
 }
@@ -183,7 +183,7 @@ int main(int argc, char *argv[]) {
     for (int i = 0; i < openGL_supported_versions.size() && win == nullptr; i++) {
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, openGL_supported_versions[i][0]);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, openGL_supported_versions[i][1]);
-        win = glfwCreateWindow(384, 256, "OpenGL", nullptr, nullptr);
+        win = glfwCreateWindow(600, 600, "OpenGL", nullptr, nullptr);
     }
 
     if (win == nullptr)

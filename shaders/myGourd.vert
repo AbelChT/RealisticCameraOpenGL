@@ -10,6 +10,7 @@ uniform vec3 dcol;
 uniform float ks;
 uniform vec3 scol;
 uniform float ns;
+
 out SDATA
 {
     vec3 color;

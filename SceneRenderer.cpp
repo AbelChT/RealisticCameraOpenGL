@@ -17,8 +17,8 @@ GLuint gourdProgramId;
 glm::vec3 light;
 
 // Gourd shader path
-const char gourdVsPath[] = "shaders/my_gourd.vert";
-const char gourdFsPath[] = "shaders/my_gourd.frag";
+const char gourdVsPath[] = "shaders/myGourd.vert";
+const char gourdFsPath[] = "shaders/myGourd.frag";
 
 //// Buffer user for accumulations
 //GLuint accumulatorFrameBufferObject;
@@ -27,8 +27,8 @@ const char gourdFsPath[] = "shaders/my_gourd.frag";
 GLuint transferProgramId;
 
 // Transfer shader path
-const char accumulateVsPath[] = "shaders/sum16Textures.vert";
-const char accumulateFsPath[] = "shaders/sum16Textures.frag";
+const char accumulateVsPath[] = "shaders/sumTextures.vert";
+const char accumulateFsPath[] = "shaders/sumTextures.frag";
 
 // screen texture VAO
 GLuint screenTextureVAO;
@@ -170,7 +170,12 @@ void reshapeScene(int w, int h) {
     glViewport(0, 0, w, h);
 }
 
-
+/**
+ * Render frame
+ * @param w
+ * @param h
+ * @param world_ro
+ */
 void renderFrameIntoDefaultFrameBuffer(int w, int h, float world_ro = 1.0) {
     std::cout << "renderFrameIntoDefaultFrameBuffer" << std::endl;
 
@@ -234,8 +239,7 @@ void renderFrameIntoDefaultFrameBuffer(int w, int h, float world_ro = 1.0) {
     glDisableVertexAttribArray(1);
 }
 
-
-void accumulateTexturesIntoDefaultFrameBuffer(GLuint accumulatorTexColorBuffer[2]) {
+void accumulateTexturesIntoDefaultFrameBuffer(GLuint accumulatorTexColorBuffer, unsigned int numberOfFrames) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glUseProgram(transferProgramId);
@@ -243,18 +247,12 @@ void accumulateTexturesIntoDefaultFrameBuffer(GLuint accumulatorTexColorBuffer[2
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
 
-    // use the color attachment texture as the texture of the quad plane
-    GLuint texLoc = glGetUniformLocation(transferProgramId, "texture0");
-    glUniform1i(texLoc, 0);
-
-    texLoc = glGetUniformLocation(transferProgramId, "texture1");
-    glUniform1i(texLoc, 1);
+    // Communicate the number of frames in the texture
+    GLuint numberOfFramesLoc = glGetUniformLocation(transferProgramId, "numberOfFrames");
+    glUniform1i(numberOfFramesLoc, numberOfFrames);
 
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, accumulatorTexColorBuffer[0]);
-
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, accumulatorTexColorBuffer[1]);
+    glBindTexture(GL_TEXTURE_2D_ARRAY, accumulatorTexColorBuffer);
 
     glDrawArrays(GL_TRIANGLES, 0, 6);
 
@@ -264,48 +262,31 @@ void accumulateTexturesIntoDefaultFrameBuffer(GLuint accumulatorTexColorBuffer[2
 
 
 void renderFrame(int w, int h) {
-    std::cout << "renderFrame" << std::endl;
+    const int numberOfFrames = 4;
+    GLuint accumulatorTexColorBuffer;
+    glGenTextures(1, &accumulatorTexColorBuffer);
+    glActiveTexture(GL_TEXTURE0);
 
-    const int numberOfFrames = 2;
-    GLuint accumulatorTexColorBuffer[numberOfFrames];
-    glGenTextures(2, accumulatorTexColorBuffer);
-
-    for (GLuint i : accumulatorTexColorBuffer) {
-        // Generate texture for the accumulator buffer
-        glBindTexture(GL_TEXTURE_2D, i);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr); // TODO: Change
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-    }
+    // Generate texture for the accumulator buffer
+    glBindTexture(GL_TEXTURE_2D_ARRAY, accumulatorTexColorBuffer);
+    glTexStorage3D(GL_TEXTURE_2D_ARRAY, 1, GL_RGB8, w, h, numberOfFrames);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
 
     // Unbind texture
-    glBindTexture(GL_TEXTURE_2D, 0);
+    glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
 
     for (int i = 0; i < numberOfFrames; i++) {
         renderFrameIntoDefaultFrameBuffer(w, h, 1.0f + ((float) i) * 0.4f);
-        glBindTexture(GL_TEXTURE_2D, accumulatorTexColorBuffer[i]);
-        glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 0, 0, w, h);
+        glBindTexture(GL_TEXTURE_2D_ARRAY, accumulatorTexColorBuffer);
+        glCopyTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, i, 0, 0, w, h);
     }
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    // Sum all textures and show in the screen
-    // GLuint decalTexLocation = glGetUniformLocation(transferProgramId, "screenTexture");
+    accumulateTexturesIntoDefaultFrameBuffer(accumulatorTexColorBuffer, numberOfFrames);
 
-    glUseProgram(transferProgramId);
-
-    glBindVertexArray(screenTextureVAO);
-    glEnableVertexAttribArray(0);
-    glEnableVertexAttribArray(1);
-
-    // use the color attachment texture as the texture of the quad plane
-    // glBindTexture(GL_TEXTURE_2D, accumulatorTexColorBuffer);
-
-    // glUniform1i(glGetUniformLocation(transferProgramId, "screenTexture"), 0);
-
-    accumulateTexturesIntoDefaultFrameBuffer(accumulatorTexColorBuffer);
-
-    glDeleteTextures(2, accumulatorTexColorBuffer);
+    glDeleteTextures(1, &accumulatorTexColorBuffer);
 }

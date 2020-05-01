@@ -170,47 +170,12 @@ void reshapeScene(int w, int h) {
     glViewport(0, 0, w, h);
 }
 
-void renderFrame(int w, int h) {
-    std::cout << "renderFrame" << std::endl;
-    // TODO: My texture print test
-    PNG tex_png;
-    GLuint tex;
 
-    tex_png.load("tex/checker.png");
-    glGenTextures(1, &tex);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, tex);
-    glTexStorage2D(GL_TEXTURE_2D,
-                   8,
-                   GL_RGB32F,
-                   tex_png.width(), tex_png.height());
-    glTexSubImage2D(GL_TEXTURE_2D,
-                    0,
-                    0, 0,
-                    tex_png.width(), tex_png.height(),
-                    GL_RGB,
-                    GL_FLOAT,
-                    tex_png.pixels().data());
-    glGenerateMipmap(GL_TEXTURE_2D);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-
-    glBindTexture(GL_TEXTURE_2D, tex);
-
-
-//    // Save actual user buffers
-//    GLint defaultDrawFboId, defaultReadFboId;
-//    glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &defaultDrawFboId);
-//    glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &defaultReadFboId);
-//
-//    // Activate own frame buffer
-//    glBindFramebuffer(GL_FRAMEBUFFER, accumulatorFrameBufferObject);
+void renderFrameIntoDefaultFrameBuffer(int w, int h, float world_ro = 1.0) {
+    std::cout << "renderFrameIntoDefaultFrameBuffer" << std::endl;
 
     float world_ph = 0.0;
     float world_th = 30.0;
-    float world_ro = 1.0;
 
     if (h <= 0 || w <= 0) return;
 
@@ -313,28 +278,68 @@ void renderFrame(int w, int h) {
 //
     // glAccum(GL_RETURN, 1.0f);
 
+    glDisableVertexAttribArray(0);
+    glDisableVertexAttribArray(1);
+}
+
+
+void accumulateTexturesIntoDefaultFrameBuffer(GLuint accumulatorTexColorBuffer[2]) {
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    glUseProgram(transferProgramId);
+    glBindVertexArray(screenTextureVAO);
+    glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(1);
+
+    // use the color attachment texture as the texture of the quad plane
+    GLuint texLoc = glGetUniformLocation(transferProgramId, "screenTexture0");
+    glUniform1i(texLoc, 0);
+
+    texLoc = glGetUniformLocation(transferProgramId, "screenTexture1");
+    glUniform1i(texLoc, 1);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, accumulatorTexColorBuffer[0]);
+
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, accumulatorTexColorBuffer[1]);
+
+    glDrawArrays(GL_TRIANGLES, 0, 6);
 
     glDisableVertexAttribArray(0);
     glDisableVertexAttribArray(1);
+}
 
-    // Generate texture for the accumulator buffer
-    GLuint accumulatorTexColorBuffer;
-    glGenTextures(1, &accumulatorTexColorBuffer);
-    glBindTexture(GL_TEXTURE_2D, accumulatorTexColorBuffer);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    // glBindTexture(GL_TEXTURE_2D, 0);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
 
-    glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 0, 0, w, h);
+void renderFrame(int w, int h) {
+    std::cout << "renderFrame" << std::endl;
 
+    const int numberOfFrames = 2;
+    GLuint accumulatorTexColorBuffer[numberOfFrames];
+    glGenTextures(2, accumulatorTexColorBuffer);
+
+    for (GLuint i : accumulatorTexColorBuffer) {
+        // Generate texture for the accumulator buffer
+        glBindTexture(GL_TEXTURE_2D, i);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr); // TODO: Change
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+    }
+
+    // Unbind texture
     glBindTexture(GL_TEXTURE_2D, 0);
+
+    for (int i = 0; i < numberOfFrames; i++) {
+        renderFrameIntoDefaultFrameBuffer(w, h, 1.0f + ((float) i) * 0.4f);
+        glBindTexture(GL_TEXTURE_2D, accumulatorTexColorBuffer[i]);
+        glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 0, 0, w, h);
+    }
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    // TODO: Show texture in the screen
+    // Sum all textures and show in the screen
     // GLuint decalTexLocation = glGetUniformLocation(transferProgramId, "screenTexture");
 
     glUseProgram(transferProgramId);
@@ -348,78 +353,7 @@ void renderFrame(int w, int h) {
 
     // glUniform1i(glGetUniformLocation(transferProgramId, "screenTexture"), 0);
 
-    GLuint texLoc = glGetUniformLocation(transferProgramId, "screenTexture");
-    glUniform1i(texLoc, 0);
+    accumulateTexturesIntoDefaultFrameBuffer(accumulatorTexColorBuffer);
 
-    texLoc = glGetUniformLocation(transferProgramId, "screenTexture2");
-    glUniform1i(texLoc, 1);
-
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, accumulatorTexColorBuffer);
-
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, tex);
-
-    glDrawArrays(GL_TRIANGLES, 0, 6);
-
-    glDisableVertexAttribArray(0);
-    glDisableVertexAttribArray(1);
-    glDeleteTextures(1, &accumulatorTexColorBuffer);
-
-    // TODO: Maybe the call glCopyBufferSubData may help in copy the content from one buffer to the other
-
-    // Copy the output to the screen buffer
-//    glBindBuffer(GL_COPY_READ_BUFFER, accumulatorFrameBufferObject);
-//    glBindBuffer(GL_COPY_WRITE_BUFFER, defaultDrawFboId);
-//    glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, w * h * sizeof(float));
-
-    // Restore previous buffers
-//    glBindFramebuffer(GL_READ_FRAMEBUFFER, defaultReadFboId);
-//    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, defaultDrawFboId);
-}
-
-void renderFrameTexture(int w, int h) {
-    std::cout << "renderFrameTexture" << std::endl;
-    // TODO: My texture print test
-    PNG tex_png;
-    GLuint tex;
-
-    tex_png.load("tex/checker.png");
-    glGenTextures(1, &tex);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, tex);
-    glTexStorage2D(GL_TEXTURE_2D,
-                   8,
-                   GL_RGB32F,
-                   tex_png.width(), tex_png.height());
-    glTexSubImage2D(GL_TEXTURE_2D,
-                    0,
-                    0, 0,
-                    tex_png.width(), tex_png.height(),
-                    GL_RGB,
-                    GL_FLOAT,
-                    tex_png.pixels().data());
-    glGenerateMipmap(GL_TEXTURE_2D);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    glUseProgram(transferProgramId);
-
-    glBindVertexArray(screenTextureVAO);
-    glEnableVertexAttribArray(0);
-    glEnableVertexAttribArray(1);
-
-    // use the color attachment texture as the texture of the quad plane
-    glBindTexture(GL_TEXTURE_2D, tex);
-
-    glUniform1i(glGetUniformLocation(transferProgramId, "screenTexture"), 0);
-
-    glDrawArrays(GL_TRIANGLES, 0, 6);
-
-    glDisableVertexAttribArray(0);
-    glDisableVertexAttribArray(1);
+    glDeleteTextures(2, accumulatorTexColorBuffer);
 }

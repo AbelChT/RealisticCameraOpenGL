@@ -159,6 +159,7 @@ void renderFrameIntoDefaultFrameBuffer(int w, int h, float cameraDistanceFromO =
 
     GLuint eye_loc = glGetUniformLocation(gourdProgramId, "eye");
     GLuint view_loc = glGetUniformLocation(gourdProgramId, "view");
+    GLuint transformation_matrix_loc = glGetUniformLocation(gourdProgramId, "transformation_matrix");
     GLuint light_loc = glGetUniformLocation(gourdProgramId, "light");
     GLuint kd_loc = glGetUniformLocation(gourdProgramId, "kd");
     GLuint dcol_loc = glGetUniformLocation(gourdProgramId, "dcol");
@@ -187,18 +188,18 @@ void renderFrameIntoDefaultFrameBuffer(int w, int h, float cameraDistanceFromO =
 
     glm::mat4 view = pers * camera;
 
+    glUniformMatrix4fv(view_loc, 1, GL_FALSE, glm::value_ptr(view));
+
 
     // Cube 1
-    glm::mat4 viewCube1 = glm::translate(view,glm::vec3(0,0,0));
-
-    glUniformMatrix4fv(view_loc, 1, GL_FALSE, glm::value_ptr(viewCube1));
+    auto transformationCube1 = glm::identity<glm::mat4>();
+    glUniformMatrix4fv(transformation_matrix_loc, 1, GL_FALSE, glm::value_ptr(transformationCube1));
     glUniform3f(dcol_loc, 255.0 / 255.0, 30.0 / 255.0, 30.0 / 255.0);
     glDrawArrays(GL_TRIANGLES, 0, vertexArrayObjectSize);
 
     // Cube 2
-    glm::mat4 viewCube2 = glm::translate(view,glm::vec3(-16,2,0));
-
-    glUniformMatrix4fv(view_loc, 1, GL_FALSE, glm::value_ptr(viewCube2));
+    auto transformationCube2 = glm::translate(glm::identity<glm::mat4>(),glm::vec3(-8,2,0));
+    glUniformMatrix4fv(transformation_matrix_loc, 1, GL_FALSE, glm::value_ptr(transformationCube2));
     glUniform3f(dcol_loc, 30.0 / 255.0, 255.0 / 255.0, 30.0 / 255.0);
     glDrawArrays(GL_TRIANGLES, 0, vertexArrayObjectSize);
 

@@ -3,6 +3,7 @@ layout(location=0) in vec3 vpos;
 layout(location=1) in vec3 vnor;
 // layout(location=2) in vec3 vtc;
 uniform mat4 view;
+uniform mat4 transformation_matrix;
 uniform vec3 eye;
 uniform vec3 light;
 uniform float kd;
@@ -18,9 +19,11 @@ out SDATA
 } sdata;
 void main()
 {
+    vec4 transformed_vertex = transformation_matrix * vec4(vpos, 1);
+    vec3 avpos = transformed_vertex.xyz;
     vec3 N = normalize(vnor);
-    vec3 L = normalize(light-vpos);
-    vec3 V = normalize(eye-vpos);
+    vec3 L = normalize(light-avpos);
+    vec3 V = normalize(eye-avpos);
     sdata.color = dcol*vec3(0.1);
     float NL = max(dot(N, L), 0);
     if (NL>0)
@@ -32,5 +35,5 @@ void main()
         sdata.color += ks*scol*pow(RV, ns);
     }
     // sdata.tc = vtc;
-    gl_Position = view*vec4(vpos, 1.0);
+    gl_Position = view*vec4(avpos, 1.0);
 }

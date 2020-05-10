@@ -1,7 +1,7 @@
 #version 420 core
 layout(location=0) in vec3 vpos;
 layout(location=1) in vec3 vnor;
-// layout(location=2) in vec3 vtc;
+layout(location=2) in vec3 vtc;
 uniform mat4 view;
 uniform mat4 transformation_matrix;
 uniform vec3 eye;
@@ -15,7 +15,7 @@ uniform float ns;
 out SDATA
 {
     vec3 color;
-// vec3 tc;
+    vec3 tc;
 } sdata;
 void main()
 {
@@ -34,6 +34,6 @@ void main()
         if (RV>0)
         sdata.color += ks*scol*pow(RV, ns);
     }
-    // sdata.tc = vtc;
+    sdata.tc = vtc;
     gl_Position = view*vec4(avpos, 1.0);
 }

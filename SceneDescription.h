@@ -19,6 +19,9 @@ public:
 
     // Normals of the scene
     vector<glm::vec3> normals;
+
+    // Texture positions of the scene
+    vector<glm::vec3> texture_positions;
 };
 
 

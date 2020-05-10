@@ -9,11 +9,20 @@
 #include "SceneRenderer.h"
 #include "base_code/obj.h"
 
+#define GLM_ENABLE_EXPERIMENTAL
+
+#include <glm/glm.hpp>
+#include <glm/gtx/transform.hpp>
+
+
+
 void initEngine() {
     // Load Scene
     // TODO: Change to load with assimp
+    glm::mat4 xf = glm::rotate(glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+
     OBJ obj;
-    obj.load("assets/cube.obj");
+    obj.load("assets/teapot.obj", xf);
 
     // Scene description
     SceneDescription sceneDescription;
@@ -22,6 +31,7 @@ void initEngine() {
     SceneMesh sceneMesh;
     sceneMesh.vertices = obj.faces();
     sceneMesh.normals = obj.normals();
+    sceneMesh.texture_positions = obj.texcoord();
     sceneDescription.meshes.push_back(sceneMesh);
 
     std::cout << "Faces " << obj.faces().size() << std::endl;

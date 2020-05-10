@@ -30,6 +30,10 @@ const char accumulateFsPath[] = "shaders/sumTextures.frag";
 // screen texture VAO
 GLuint screenTextureVAO;
 
+// Texture loader
+PNG tex_png;
+GLuint tex;
+
 void initSceneRenderer(const SceneDescription &sceneDescription) {
     // TODO Warning: From now we are only working with one mesh of the scene and one light
     // Generate and bind vertex array
@@ -53,7 +57,36 @@ void initSceneRenderer(const SceneDescription &sceneDescription) {
                  sceneDescription.meshes.begin()->normals.data(), GL_STATIC_DRAW);
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), nullptr);
 
-    // TODO Warning: No texture associated from now
+    // Associate texture locations to the VAO
+    GLuint vertexTextureBufferObject;
+    glGenBuffers(1, &vertexTextureBufferObject);
+    glBindBuffer(GL_ARRAY_BUFFER, vertexTextureBufferObject);
+    glBufferData(GL_ARRAY_BUFFER, vertexArrayObjectSize * sizeof(glm::vec3),
+            sceneDescription.meshes.begin()->texture_positions.data(), GL_STATIC_DRAW);
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), nullptr);
+
+    // TODO: Temporal texture loader, improve it
+    tex_png.load("tex/checker.png");
+    glGenTextures(1, &tex);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, tex);
+    glTexStorage2D(GL_TEXTURE_2D,
+                   8,
+                   GL_RGB32F,
+                   tex_png.width(), tex_png.height());
+    glTexSubImage2D(GL_TEXTURE_2D,
+                    0,0, 0,
+                    tex_png.width(), tex_png.height(),
+                    GL_RGB,
+                    GL_FLOAT,
+                    tex_png.pixels().data());
+    glGenerateMipmap(GL_TEXTURE_2D);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+
+    ///// TODO: Temporal texture loader, improve it
 
     // Load shader
     gourdProgramId = createGLProgram(gourdVsPath, gourdFsPath);
@@ -178,6 +211,7 @@ void renderFrameIntoDefaultFrameBuffer(int w, int h, float cameraDistanceFromO =
     glBindVertexArray(vertexArrayObject);
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
+    glEnableVertexAttribArray(2);
 
     std::cout << axis.x << " " << axis.y << " " << axis.z << std::endl;
 
@@ -198,10 +232,17 @@ void renderFrameIntoDefaultFrameBuffer(int w, int h, float cameraDistanceFromO =
     glDrawArrays(GL_TRIANGLES, 0, vertexArrayObjectSize);
 
     // Cube 2
-    auto transformationCube2 = glm::translate(glm::identity<glm::mat4>(),glm::vec3(-8,2,0));
+    auto transformationCube2 = glm::translate(glm::identity<glm::mat4>(), glm::vec3(-8, 2, 0));
     glUniformMatrix4fv(transformation_matrix_loc, 1, GL_FALSE, glm::value_ptr(transformationCube2));
     glUniform3f(dcol_loc, 30.0 / 255.0, 255.0 / 255.0, 30.0 / 255.0);
     glDrawArrays(GL_TRIANGLES, 0, vertexArrayObjectSize);
+
+    // Cube 3
+    auto transformationCube3 = glm::translate(glm::identity<glm::mat4>(), glm::vec3(-32, -16, 0));
+    glUniformMatrix4fv(transformation_matrix_loc, 1, GL_FALSE, glm::value_ptr(transformationCube3));
+    glUniform3f(dcol_loc, 30.0 / 255.0, 30.0 / 255.0, 255.0 / 255.0);
+    glDrawArrays(GL_TRIANGLES, 0, vertexArrayObjectSize);
+
 
 //
 //    glUniformMatrix4fv(view_loc, 1, GL_FALSE, glm::value_ptr(view));
@@ -212,6 +253,7 @@ void renderFrameIntoDefaultFrameBuffer(int w, int h, float cameraDistanceFromO =
 
     glDisableVertexAttribArray(0);
     glDisableVertexAttribArray(1);
+    glDisableVertexAttribArray(2);
 }
 
 void accumulateTexturesIntoDefaultFrameBuffer(GLuint accumulatorTexColorBuffer, unsigned int numberOfFrames) {
@@ -256,11 +298,14 @@ void renderFrameWithFieldOfView(int w, int h) {
     // Unbind texture
     glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
 
-    float defaultDistanceFromO = 2.4f;
+    float defaultDistanceFromO = 4.0f;
     float defaultFieldOfView = 45.0f;
 
-    float firstStepDistanceFromO = defaultDistanceFromO;
-    float stepSize = 0.0001f;
+    float stepSize = 0.00007f;
+    // float stepSize = 0.0004f;
+
+    float firstStepDistanceFromO = defaultDistanceFromO - ((float) numberOfFrames / 2.0) * stepSize;
+
 
     for (int i = 0; i < numberOfFrames; i++) {
         float distanceFromO = firstStepDistanceFromO + ((float) i) * stepSize;
@@ -294,6 +339,6 @@ void renderFrame(int w, int h, bool withFieldOfView) {
     if (withFieldOfView) {
         renderFrameWithFieldOfView(w, h);
     } else {
-        renderFrameIntoDefaultFrameBuffer(w, h, 2.4f);
+        renderFrameIntoDefaultFrameBuffer(w, h, 4.0f);
     }
 }

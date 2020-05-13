@@ -15,35 +15,61 @@
 #include <glm/gtx/transform.hpp>
 
 
-
 void initEngine() {
-    // Load Scene
-    // TODO: Change to load with assimp
+    // Meshes definition
     glm::mat4 xf = glm::rotate(glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 
     OBJ obj;
     obj.load("assets/teapot.obj", xf);
 
-    // Scene description
-    SceneDescription sceneDescription;
-
-    // Add meshes
-    SceneMesh sceneMesh;
-    sceneMesh.vertices = obj.faces();
-    sceneMesh.normals = obj.normals();
-    sceneMesh.texture_positions = obj.texcoord();
-    sceneDescription.meshes.push_back(sceneMesh);
-
     std::cout << "Faces " << obj.faces().size() << std::endl;
 
-    // Add lights
-    SceneLight sceneLight;
-    sceneLight.position = glm::normalize(glm::vec3(1.0f));
-    sceneDescription.lights.push_back(sceneLight);
+    vector<SceneMesh> sceneMeshes{
+            SceneMesh(obj.faces(), obj.normals(), obj.texcoord())
+    };
+
+    // Textures definition
+    vector<PNG> textures{
+            PNG("tex/checker.png")
+    };
+
+    // Light definition
+    SceneLight sceneLight(glm::normalize(glm::vec3(1.0f)));
+
+    // Camera definition
+    glm::vec3 to(0, 0, 0);
+
+    float world_ph = 0.0;
+    float world_th = 30.0;
+
+    float world_ro = 1.0;
+
+    const float ph = glm::radians(world_ph);
+    const float th = glm::radians(world_th);
+
+    glm::vec3 axis(cos(ph) * cos(th), sin(ph) * cos(th), sin(th));
+    float cameraDistanceFromO = 4.0f;
+    glm::vec3 eye = to + cameraDistanceFromO * axis;
+    SceneCamera sceneCamera(eye, to, 45.0f, 0.01f, 1000.0f);
+
+    // Objects definition
+    vector<ObjectDescription> sceneObjects{
+            ObjectDescription(glm::vec3(0, 0, 0), glm::vec3(0, 0, 0),
+                              glm::vec3(0, 0, 0), glm::vec3(255, 30, 30),
+                              false, 0, true, 0),
+            ObjectDescription(glm::vec3(-8, 2, 0), glm::vec3(0, 0, 0),
+                              glm::vec3(0, 0, 0), glm::vec3(30, 255, 30),
+                              false, 0, true, 0),
+            ObjectDescription(glm::vec3(-32, -16, 0), glm::vec3(0, 0, 0),
+                              glm::vec3(0, 0, 0), glm::vec3(30, 30, 255),
+                              false, 0, true, 0)
+    };
+
+    // Scene description
+    SceneDescription sceneDescription(sceneMeshes, textures, sceneObjects, sceneLight, sceneCamera);
 
     // Init engine
     initSceneRenderer(sceneDescription);
-
 }
 
 void callbackOpenGLReshape(GLFWwindow *win, int w, int h) {

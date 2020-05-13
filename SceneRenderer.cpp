@@ -101,7 +101,7 @@ void initSceneRenderer(const SceneDescription &sceneDescription) {
     glClearColor(0, 0, 0, 0);
 
     // Load lights
-    light = sceneDescription.lights.front().position;
+    light = sceneDescription.light.position;
 
     // Configure OpenGL
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -167,21 +167,12 @@ void reshapeScene(int w, int h) {
 void renderFrameIntoDefaultFrameBuffer(int w, int h, float cameraDistanceFromO = 1.0, float fieldOfView = 45.0f) {
     std::cout << "renderFrameIntoDefaultFrameBuffer" << std::endl;
 
-    float world_ph = 0.0;
-    float world_th = 30.0;
-
-    float world_ro = 1.0;
-
     if (h <= 0 || w <= 0) return;
 
     float aspect = float(w) / float(h);
 
     glm::mat4 pers = glm::perspective(fieldOfView, aspect, 0.01f, 1000.0f);
 
-    const float ph = glm::radians(world_ph);
-    const float th = glm::radians(world_th);
-
-    glm::vec3 axis(cos(ph) * cos(th), sin(ph) * cos(th), sin(th));
 
     glm::vec3 to(0, 0, 0);
 

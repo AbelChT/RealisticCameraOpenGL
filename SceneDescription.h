@@ -24,11 +24,39 @@ public:
 
     // Texture positions of the scene
     vector<glm::vec3> texture_positions;
+
+    // Constructor
+    SceneMesh(vector<glm::vec3> vertices, vector<glm::vec3> normals,
+              vector<glm::vec3> texturePositions) : vertices(std::move(vertices)), normals(std::move(normals)),
+                                                    texture_positions(std::move(texturePositions)) {}
 };
 
 
 // Represent a camera in the scene
 struct SceneCamera {
+public:
+    // Position of the scene camera
+    glm::vec3 position;
+
+    // Look at
+    glm::vec3 lookAt;
+
+    // Field of view
+    float fieldOfView;
+
+    // zNear
+    float zNear;
+
+    // zFar
+    float zFar;
+
+    SceneCamera(const glm::vec3 &position, const glm::vec3 &lookAt, float fieldOfView, float zNear, float zFar)
+            : position(position), lookAt(lookAt), fieldOfView(fieldOfView), zNear(zNear), zFar(zFar) {}
+};
+
+// Parameters that define a camera in the real world
+struct CameraDefinition {
+public:
     // Position of the scene camera
     glm::vec3 position;
 
@@ -44,7 +72,11 @@ struct SceneCamera {
     // f-stop
     float fStop;
 
-
+    // TODO: Should have a function to obtain a SceneCamera
+    // Constructor
+    CameraDefinition(const glm::vec3 &position, const glm::vec3 &lookAt, float filmLarge, float filmDistance,
+                     float fStop)
+            : position(position), lookAt(lookAt), filmLarge(filmLarge), filmDistance(filmDistance), fStop(fStop) {}
 };
 
 // Represent a light in the scene
@@ -59,6 +91,7 @@ public:
 
 struct ObjectDescription {
 public:
+    // Transformation order translate-rotate-scale
     // Position of the object
     glm::vec3 position;
 

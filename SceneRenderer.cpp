@@ -5,10 +5,12 @@
 #include "base_code/png.h"
 
 // Vertex array object
-GLuint vertexArrayObject;
+//GLuint vertexArrayObject;
+vector<GLuint> vertexArrayObjects;
 
 // Vertex array object size / Number of vertices
 GLuint vertexArrayObjectSize;
+vector<GLuint> vertexArrayObjectSizes;
 
 // Gourd shader program id
 GLuint gourdProgramId;
@@ -29,10 +31,6 @@ const char accumulateFsPath[] = "shaders/sumTextures.frag";
 
 // screen texture VAO
 GLuint screenTextureVAO;
-
-// Texture loader
-PNG tex_png;
-GLuint tex;
 
 void initSceneRenderer(const SceneDescription &sceneDescription) {
     // TODO Warning: From now we are only working with one mesh of the scene and one light
@@ -62,7 +60,7 @@ void initSceneRenderer(const SceneDescription &sceneDescription) {
     glGenBuffers(1, &vertexTextureBufferObject);
     glBindBuffer(GL_ARRAY_BUFFER, vertexTextureBufferObject);
     glBufferData(GL_ARRAY_BUFFER, vertexArrayObjectSize * sizeof(glm::vec3),
-            sceneDescription.meshes.begin()->texture_positions.data(), GL_STATIC_DRAW);
+                 sceneDescription.meshes.begin()->texture_positions.data(), GL_STATIC_DRAW);
     glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), nullptr);
 
     // TODO: Temporal texture loader, improve it
@@ -75,7 +73,7 @@ void initSceneRenderer(const SceneDescription &sceneDescription) {
                    GL_RGB32F,
                    tex_png.width(), tex_png.height());
     glTexSubImage2D(GL_TEXTURE_2D,
-                    0,0, 0,
+                    0, 0, 0,
                     tex_png.width(), tex_png.height(),
                     GL_RGB,
                     GL_FLOAT,

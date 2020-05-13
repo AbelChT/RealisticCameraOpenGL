@@ -5,18 +5,25 @@
 #include "base_code/png.h"
 
 // Vertex array object
-//GLuint vertexArrayObject;
 vector<GLuint> vertexArrayObjects;
 
 // Vertex array object size / Number of vertices
-GLuint vertexArrayObjectSize;
 vector<GLuint> vertexArrayObjectSizes;
+
+// Texture used in the scene
+GLuint textureScene;
 
 // Gourd shader program id
 GLuint gourdProgramId;
 
 // Lights info
 glm::vec3 light;
+
+// Scene camera
+SceneCamera sceneCamera;
+
+// Scene objects
+vector<ObjectDescription> sceneObjects;
 
 // Gourd shader path
 const char gourdVsPath[] = "shaders/myGourd.vert";
@@ -33,58 +40,66 @@ const char accumulateFsPath[] = "shaders/sumTextures.frag";
 GLuint screenTextureVAO;
 
 void initSceneRenderer(const SceneDescription &sceneDescription) {
-    // TODO Warning: From now we are only working with one mesh of the scene and one light
     // Generate and bind vertex array
-    glGenVertexArrays(1, &vertexArrayObject);
-    glBindVertexArray(vertexArrayObject);
-    vertexArrayObjectSize = sceneDescription.meshes.begin()->vertices.size();
+    vertexArrayObjects.resize(sceneDescription.meshes.size());
+    vertexArrayObjectSizes.resize(sceneDescription.meshes.size());
+    glGenVertexArrays(sceneDescription.meshes.size(), vertexArrayObjects.data());
 
-    // Associate vertex locations to the VAO
-    GLuint vertexLocationBufferObject;
-    glGenBuffers(1, &vertexLocationBufferObject);
-    glBindBuffer(GL_ARRAY_BUFFER, vertexLocationBufferObject);
-    glBufferData(GL_ARRAY_BUFFER, vertexArrayObjectSize * sizeof(glm::vec3),
-                 sceneDescription.meshes.begin()->vertices.data(), GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), nullptr);
+    for (int i = 0; i < vertexArrayObjects.size(); i++) {
+        auto vertexArrayObject = vertexArrayObjects[i];
+        glBindVertexArray(vertexArrayObject);
+        vertexArrayObjectSizes[i] = sceneDescription.meshes[i].normals.size();
 
-    // Associate normals to the VAO
-    GLuint vertexNormalsBufferObject;
-    glGenBuffers(1, &vertexNormalsBufferObject);
-    glBindBuffer(GL_ARRAY_BUFFER, vertexNormalsBufferObject);
-    glBufferData(GL_ARRAY_BUFFER, vertexArrayObjectSize * sizeof(glm::vec3),
-                 sceneDescription.meshes.begin()->normals.data(), GL_STATIC_DRAW);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), nullptr);
+        // Associate vertex locations to the VAO
+        GLuint vertexLocationBufferObject;
+        glGenBuffers(1, &vertexLocationBufferObject);
+        glBindBuffer(GL_ARRAY_BUFFER, vertexLocationBufferObject);
+        glBufferData(GL_ARRAY_BUFFER, vertexArrayObjectSizes[i] * sizeof(glm::vec3),
+                     sceneDescription.meshes.begin()->vertices.data(), GL_STATIC_DRAW);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), nullptr);
 
-    // Associate texture locations to the VAO
-    GLuint vertexTextureBufferObject;
-    glGenBuffers(1, &vertexTextureBufferObject);
-    glBindBuffer(GL_ARRAY_BUFFER, vertexTextureBufferObject);
-    glBufferData(GL_ARRAY_BUFFER, vertexArrayObjectSize * sizeof(glm::vec3),
-                 sceneDescription.meshes.begin()->texture_positions.data(), GL_STATIC_DRAW);
-    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), nullptr);
+        // Associate normals to the VAO
+        GLuint vertexNormalsBufferObject;
+        glGenBuffers(1, &vertexNormalsBufferObject);
+        glBindBuffer(GL_ARRAY_BUFFER, vertexNormalsBufferObject);
+        glBufferData(GL_ARRAY_BUFFER, vertexArrayObjectSizes[i] * sizeof(glm::vec3),
+                     sceneDescription.meshes.begin()->normals.data(), GL_STATIC_DRAW);
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), nullptr);
 
-    // TODO: Temporal texture loader, improve it
-    tex_png.load("tex/checker.png");
-    glGenTextures(1, &tex);
+        // Associate texture locations to the VAO
+        GLuint vertexTextureBufferObject;
+        glGenBuffers(1, &vertexTextureBufferObject);
+        glBindBuffer(GL_ARRAY_BUFFER, vertexTextureBufferObject);
+        glBufferData(GL_ARRAY_BUFFER, vertexArrayObjectSizes[i] * sizeof(glm::vec3),
+                     sceneDescription.meshes.begin()->texture_positions.data(), GL_STATIC_DRAW);
+        glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), nullptr);
+    }
+
+    // Generate and bind texture array
+    glGenTextures(1, &textureScene);
     glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, tex);
+    glBindTexture(GL_TEXTURE_2D, textureScene);
     glTexStorage2D(GL_TEXTURE_2D,
                    8,
                    GL_RGB32F,
-                   tex_png.width(), tex_png.height());
+                   sceneDescription.texture.width(), sceneDescription.texture.height());
     glTexSubImage2D(GL_TEXTURE_2D,
                     0, 0, 0,
-                    tex_png.width(), tex_png.height(),
+                    sceneDescription.texture.width(), sceneDescription.texture.height(),
                     GL_RGB,
                     GL_FLOAT,
-                    tex_png.pixels().data());
+                    sceneDescription.texture.pixels().data());
     glGenerateMipmap(GL_TEXTURE_2D);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 
-    ///// TODO: Temporal texture loader, improve it
+    // Save camera
+    sceneCamera = sceneDescription.camera;
+
+    // Save scene objects
+    sceneObjects = sceneDescription.objects;
 
     // Load shader
     gourdProgramId = createGLProgram(gourdVsPath, gourdFsPath);
@@ -162,7 +177,8 @@ void reshapeScene(int w, int h) {
  * @param h
  * @param world_ro
  */
-void renderFrameIntoDefaultFrameBuffer(int w, int h, float cameraDistanceFromO = 1.0, float fieldOfView = 45.0f) {
+void renderFrameIntoDefaultFrameBuffer(const int w, const int h, const glm::vec3 &eye, const glm::vec3 &to,
+                                       float fieldOfView) {
     std::cout << "renderFrameIntoDefaultFrameBuffer" << std::endl;
 
     if (h <= 0 || w <= 0) return;
@@ -170,9 +186,6 @@ void renderFrameIntoDefaultFrameBuffer(int w, int h, float cameraDistanceFromO =
     float aspect = float(w) / float(h);
 
     glm::mat4 pers = glm::perspective(fieldOfView, aspect, 0.01f, 1000.0f);
-
-
-    glm::vec3 to(0, 0, 0);
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -196,53 +209,37 @@ void renderFrameIntoDefaultFrameBuffer(int w, int h, float cameraDistanceFromO =
     glUniform3f(scol_loc, 1.0, 1.0, 1.0);
     glUniform1f(ns_loc, 10.0f);
 
-
-    glBindVertexArray(vertexArrayObject);
-    glEnableVertexAttribArray(0);
-    glEnableVertexAttribArray(1);
-    glEnableVertexAttribArray(2);
-
-    std::cout << axis.x << " " << axis.y << " " << axis.z << std::endl;
-
-    glm::vec3 eye = to + cameraDistanceFromO * axis;
     glUniform3fv(eye_loc, 1, glm::value_ptr(eye));
-
     glm::mat4 camera = glm::lookAt(eye, to, glm::vec3(0, 0, 1));
-
     glm::mat4 view = pers * camera;
-
     glUniformMatrix4fv(view_loc, 1, GL_FALSE, glm::value_ptr(view));
 
+    for (auto &sceneObject : sceneObjects) {
+        auto vertexArrayObject = vertexArrayObjects[sceneObject.meshIndex];
+        glBindVertexArray(vertexArrayObject);
+        glEnableVertexAttribArray(0);
+        glEnableVertexAttribArray(1);
+        glEnableVertexAttribArray(2);
 
-    // Cube 1
-    auto transformationCube1 = glm::identity<glm::mat4>();
-    glUniformMatrix4fv(transformation_matrix_loc, 1, GL_FALSE, glm::value_ptr(transformationCube1));
-    glUniform3f(dcol_loc, 255.0 / 255.0, 30.0 / 255.0, 30.0 / 255.0);
-    glDrawArrays(GL_TRIANGLES, 0, vertexArrayObjectSize);
+        // Object transformations
+        auto transformationsOfObject = glm::identity<glm::mat4>();
+        transformationsOfObject = glm::translate(transformationsOfObject, sceneObject.position);
+        transformationsOfObject = glm::rotate(transformationsOfObject, glm::radians(sceneObject.rotation.x),
+                                              glm::vec3(1.0f, 0.0f, 0.0f));
+        transformationsOfObject = glm::rotate(transformationsOfObject, glm::radians(sceneObject.rotation.y),
+                                              glm::vec3(0.0f, 1.0f, 0.0f));
+        transformationsOfObject = glm::rotate(transformationsOfObject, glm::radians(sceneObject.rotation.z),
+                                              glm::vec3(0.0f, 0.0f, 1.0f));
+        transformationsOfObject = glm::scale(transformationsOfObject, sceneObject.scale);
 
-    // Cube 2
-    auto transformationCube2 = glm::translate(glm::identity<glm::mat4>(), glm::vec3(-8, 2, 0));
-    glUniformMatrix4fv(transformation_matrix_loc, 1, GL_FALSE, glm::value_ptr(transformationCube2));
-    glUniform3f(dcol_loc, 30.0 / 255.0, 255.0 / 255.0, 30.0 / 255.0);
-    glDrawArrays(GL_TRIANGLES, 0, vertexArrayObjectSize);
+        glUniformMatrix4fv(transformation_matrix_loc, 1, GL_FALSE, glm::value_ptr(transformationsOfObject));
+        glUniform3f(dcol_loc, sceneObject.color.x / 255.0, sceneObject.color.y / 255.0, sceneObject.color.z / 255.0);
+        glDrawArrays(GL_TRIANGLES, 0, vertexArrayObjectSizes[sceneObject.meshIndex]);
 
-    // Cube 3
-    auto transformationCube3 = glm::translate(glm::identity<glm::mat4>(), glm::vec3(-32, -16, 0));
-    glUniformMatrix4fv(transformation_matrix_loc, 1, GL_FALSE, glm::value_ptr(transformationCube3));
-    glUniform3f(dcol_loc, 30.0 / 255.0, 30.0 / 255.0, 255.0 / 255.0);
-    glDrawArrays(GL_TRIANGLES, 0, vertexArrayObjectSize);
-
-
-//
-//    glUniformMatrix4fv(view_loc, 1, GL_FALSE, glm::value_ptr(view));
-//
-//    glUniform3fv(eye_loc, 1, glm::value_ptr(eye));
-//    glUniform3f(dcol_loc, 255.0 / 255.0, 30.0 / 255.0, 30.0 / 255.0);
-//    glDrawArrays(GL_TRIANGLES, 0, vertexArrayObjectSize);
-
-    glDisableVertexAttribArray(0);
-    glDisableVertexAttribArray(1);
-    glDisableVertexAttribArray(2);
+        glDisableVertexAttribArray(0);
+        glDisableVertexAttribArray(1);
+        glDisableVertexAttribArray(2);
+    }
 }
 
 void accumulateTexturesIntoDefaultFrameBuffer(GLuint accumulatorTexColorBuffer, unsigned int numberOfFrames) {
@@ -287,21 +284,26 @@ void renderFrameWithFieldOfView(int w, int h) {
     // Unbind texture
     glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
 
-    float defaultDistanceFromO = 4.0f;
-    float defaultFieldOfView = 45.0f;
+    float defaultDistanceFromO = glm::distance(sceneCamera.position, sceneCamera.lookAt);
+    float defaultFieldOfView = sceneCamera.fieldOfView;
 
     float stepSize = 0.00007f;
     // float stepSize = 0.0004f;
 
     float firstStepDistanceFromO = defaultDistanceFromO - ((float) numberOfFrames / 2.0) * stepSize;
 
+    glm::vec3 to = sceneCamera.lookAt;
+
+    glm::vec3 axis = glm::normalize(sceneCamera.position - sceneCamera.lookAt);
 
     for (int i = 0; i < numberOfFrames; i++) {
         float distanceFromO = firstStepDistanceFromO + ((float) i) * stepSize;
         double tan_b = ((defaultDistanceFromO) * tan((defaultFieldOfView * M_PI) / 180.0)) / distanceFromO;
         float fieldOfView = (float) ((atan(tan_b) * 180.0) / M_PI);
-        std::cout << "Field of view " << fieldOfView << std::endl;
-        renderFrameIntoDefaultFrameBuffer(w, h, distanceFromO, fieldOfView);
+
+        glm::vec3 eye = to + distanceFromO * axis;
+
+        renderFrameIntoDefaultFrameBuffer(w, h, eye, to, fieldOfView);
         glBindTexture(GL_TEXTURE_2D_ARRAY, accumulatorTexColorBuffer);
         glCopyTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, i, 0, 0, w, h);
     }
@@ -328,6 +330,6 @@ void renderFrame(int w, int h, bool withFieldOfView) {
     if (withFieldOfView) {
         renderFrameWithFieldOfView(w, h);
     } else {
-        renderFrameIntoDefaultFrameBuffer(w, h, 4.0f);
+        renderFrameIntoDefaultFrameBuffer(w, h, sceneCamera.position, sceneCamera.lookAt, sceneCamera.fieldOfView);
     }
 }

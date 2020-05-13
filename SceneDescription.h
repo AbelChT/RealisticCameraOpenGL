@@ -50,6 +50,8 @@ public:
     // zFar
     float zFar;
 
+    SceneCamera() : position(glm::vec3(0, 0, 0)), lookAt(glm::vec3(0, 0, 0)), fieldOfView(0), zNear(0), zFar(0) {}
+
     SceneCamera(const glm::vec3 &position, const glm::vec3 &lookAt, float fieldOfView, float zNear, float zFar)
             : position(position), lookAt(lookAt), fieldOfView(fieldOfView), zNear(zNear), zFar(zFar) {}
 };
@@ -95,20 +97,20 @@ public:
     // Position of the object
     glm::vec3 position;
 
-    // Rotation of the object
+    // Rotation of the object. Order rotation in x, rotation in y, rotation in z
     glm::vec3 rotation;
 
     // Scale of the object
     glm::vec3 scale;
 
     // Color of the object
-    glm::ivec3 color;
+    glm::vec3 color;
 
     // Use color
     bool useColor;
 
     // Texture index of the object
-    unsigned int textureIndex;
+    // unsigned int textureIndex;
 
     // Use texture
     bool useTexture;
@@ -118,10 +120,9 @@ public:
 
     // Constructor
     ObjectDescription(const glm::vec3 &position, const glm::vec3 &rotation, const glm::vec3 &scale,
-                      const glm::ivec3 &color, bool useColor, unsigned int textureIndex, bool useTexture,
+                      const glm::ivec3 &color, bool useColor, bool useTexture,
                       unsigned int meshIndex) : position(position), rotation(rotation), scale(scale), color(color),
-                                                useColor(useColor), textureIndex(textureIndex), useTexture(useTexture),
-                                                meshIndex(meshIndex) {}
+                                                useColor(useColor), useTexture(useTexture), meshIndex(meshIndex) {}
 };
 
 // Description of the scene
@@ -131,7 +132,9 @@ public:
     vector<SceneMesh> meshes;
 
     // Textures in the scene
-    vector<PNG> textures;
+    // vector<PNG> textures;
+    // TODO to improve: Include multiple textures
+    PNG texture; // Only one texture from now
 
     // Objects in the scene
     vector<ObjectDescription> objects;
@@ -143,11 +146,11 @@ public:
     SceneCamera camera;
 
     // Constructor
-    SceneDescription(vector<SceneMesh> meshes, vector<PNG> textures,
-                     vector<ObjectDescription> objects, const SceneLight &light, const SceneCamera &camera)
-            : meshes(std::move(meshes)), textures(std::move(textures)), objects(std::move(objects)), light(light),
-              camera(camera) {}
+    SceneDescription(vector<SceneMesh> meshes, PNG texture, vector<ObjectDescription> objects,
+                     const SceneLight &light, const SceneCamera &camera) : meshes(std::move(meshes)),
+                                                                           texture(std::move(texture)),
+                                                                           objects(std::move(objects)), light(light),
+                                                                           camera(camera) {}
 };
-
 
 #endif //TESTINGOPENGL_SCENEDESCRIPTION_H

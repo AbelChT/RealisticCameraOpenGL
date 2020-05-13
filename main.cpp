@@ -29,9 +29,10 @@ void initEngine() {
     };
 
     // Textures definition
-    vector<PNG> textures{
-            PNG("tex/checker.png")
-    };
+    auto texture = PNG("tex/checker.png");
+//    vector<PNG> textures{
+//            PNG("tex/checker.png")
+//    };
 
     // Light definition
     SceneLight sceneLight(glm::normalize(glm::vec3(1.0f)));
@@ -55,18 +56,18 @@ void initEngine() {
     // Objects definition
     vector<ObjectDescription> sceneObjects{
             ObjectDescription(glm::vec3(0, 0, 0), glm::vec3(0, 0, 0),
-                              glm::vec3(0, 0, 0), glm::vec3(255, 30, 30),
-                              false, 0, true, 0),
+                              glm::vec3(1, 1, 1), glm::vec3(255, 30, 30),
+                              false, true, 0),
             ObjectDescription(glm::vec3(-8, 2, 0), glm::vec3(0, 0, 0),
-                              glm::vec3(0, 0, 0), glm::vec3(30, 255, 30),
-                              false, 0, true, 0),
+                              glm::vec3(1, 1, 1), glm::vec3(30, 255, 30),
+                              false, true, 0),
             ObjectDescription(glm::vec3(-32, -16, 0), glm::vec3(0, 0, 0),
-                              glm::vec3(0, 0, 0), glm::vec3(30, 30, 255),
-                              false, 0, true, 0)
+                              glm::vec3(1, 1, 1), glm::vec3(30, 30, 255),
+                              false, true, 0)
     };
 
     // Scene description
-    SceneDescription sceneDescription(sceneMeshes, textures, sceneObjects, sceneLight, sceneCamera);
+    SceneDescription sceneDescription(sceneMeshes, texture, sceneObjects, sceneLight, sceneCamera);
 
     // Init engine
     initSceneRenderer(sceneDescription);

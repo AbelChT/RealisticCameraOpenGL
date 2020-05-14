@@ -50,7 +50,7 @@ public:
     // zFar
     float zFar;
 
-    SceneCamera() : position(glm::vec3(0, 0, 0)), lookAt(glm::vec3(0, 0, 0)), fieldOfView(0), zNear(0), zFar(0) {}
+    explicit SceneCamera() : position(glm::vec3(0, 0, 0)), lookAt(glm::vec3(0, 0, 0)), fieldOfView(0), zNear(0), zFar(0) {}
 
     SceneCamera(const glm::vec3 &position, const glm::vec3 &lookAt, float fieldOfView, float zNear, float zFar)
             : position(position), lookAt(lookAt), fieldOfView(fieldOfView), zNear(zNear), zFar(zFar) {}

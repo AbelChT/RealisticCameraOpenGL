@@ -178,7 +178,8 @@ void reshapeScene(int w, int h) {
  * @param world_ro
  */
 void renderFrameIntoDefaultFrameBuffer(const int w, const int h, const glm::vec3 &eye, const glm::vec3 &to,
-                                       float fieldOfView, float zNear, float zFar) {
+                                       float fieldOfView, float zNear, float zFar,
+                                       glm::vec3 up = glm::vec3(0, 0, 1)) {
     std::cout << "renderFrameIntoDefaultFrameBuffer" << std::endl;
 
     if (h <= 0 || w <= 0) return;
@@ -212,7 +213,7 @@ void renderFrameIntoDefaultFrameBuffer(const int w, const int h, const glm::vec3
     glUniform1f(ns_loc, 10.0f);
 
     glUniform3fv(eye_loc, 1, glm::value_ptr(eye));
-    glm::mat4 camera = glm::lookAt(eye, to, glm::vec3(0, 0, 1));
+    glm::mat4 camera = glm::lookAt(eye, to, up);
     glm::mat4 view = pers * camera;
     glUniformMatrix4fv(view_loc, 1, GL_FALSE, glm::value_ptr(view));
 
@@ -357,15 +358,11 @@ void renderFrameWithFieldOfViewAlgorithm2(int w, int h) {
     // Unbind texture
     glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
 
-    float defaultDistanceFromO = glm::distance(sceneCamera.position, sceneCamera.lookAt);
-    float defaultFieldOfView = sceneCamera.fieldOfView;
-
-    float stepSize = 0.00007f;
-    // float stepSize = 0.0004f;
-
-    float firstStepDistanceFromO = defaultDistanceFromO - ((float) numberOfFrames / 2.0) * stepSize;
+    float fieldOfView = sceneCamera.fieldOfView;
 
     glm::vec3 to = sceneCamera.lookAt;
+
+    glm::vec3 eye = sceneCamera.position;
 
     glm::vec3 axis = glm::normalize(sceneCamera.position - sceneCamera.lookAt);
 
@@ -373,14 +370,19 @@ void renderFrameWithFieldOfViewAlgorithm2(int w, int h) {
 
     float zFar = sceneCamera.zFar;
 
+    float rotationRadius = sceneCamera.rotationRadius;
+
+    glm::vec3 up = glm::vec3(0, 0, 1);
+
+    glm::vec3 right = glm::normalize(glm::cross(to - eye, up));
+    glm::vec3 p_up = glm::normalize(glm::cross(to - eye, right));
+
     for (int i = 0; i < numberOfFrames; i++) {
-        float distanceFromO = firstStepDistanceFromO + ((float) i) * stepSize;
-        double tan_b = ((defaultDistanceFromO) * tan((defaultFieldOfView * M_PI) / 180.0)) / distanceFromO;
-        float fieldOfView = (float) ((atan(tan_b) * 180.0) / M_PI);
+        glm::vec3 positionInCircle =
+                right * cosf(i * 2 * M_PI / numberOfFrames) + p_up * sinf(i * 2 * M_PI / numberOfFrames);
 
-        glm::vec3 eye = to + distanceFromO * axis;
-
-        renderFrameIntoDefaultFrameBuffer(w, h, eye, to, fieldOfView, zNear, zFar);
+        glm::vec3 renderEye = eye + rotationRadius * positionInCircle;
+        renderFrameIntoDefaultFrameBuffer(w, h, renderEye, to, fieldOfView, zNear, zFar);
 
         glBindTexture(GL_TEXTURE_2D_ARRAY, accumulatorTexColorBuffer);
         glCopyTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, i, 0, 0, w, h);

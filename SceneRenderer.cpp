@@ -186,7 +186,7 @@ void renderFrameIntoDefaultFrameBuffer(const int w, const int h, const glm::vec3
 
     float aspect = float(w) / float(h);
 
-    glm::mat4 pers = glm::perspective(fieldOfView, aspect, zNear, zFar);
+    glm::mat4 pers = glm::perspective(glm::radians(fieldOfView), aspect, zNear, zFar);
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -213,8 +213,19 @@ void renderFrameIntoDefaultFrameBuffer(const int w, const int h, const glm::vec3
     glUniform1f(ns_loc, 10.0f);
 
     glUniform3fv(eye_loc, 1, glm::value_ptr(eye));
+
+
+
+    // Transform from model space to world space
+
+    // Transform from world space to view space
     glm::mat4 camera = glm::lookAt(eye, to, up);
+
+    // Transform from view space to homogeneous space
     glm::mat4 view = pers * camera;
+
+    // Transform from model space to clip(homogeneous) space
+    // glm::mat4 modelClipMatrix
     glUniformMatrix4fv(view_loc, 1, GL_FALSE, glm::value_ptr(view));
 
     for (auto &sceneObject : sceneObjects) {

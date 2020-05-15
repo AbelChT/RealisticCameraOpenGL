@@ -58,7 +58,7 @@ void initEngine() {
     glm::vec3 to(eye.x - sin(glm::radians(cameraRotationX)), 0, eye.z - cos(glm::radians(cameraRotationX)));
 
     // TODO: Solve error with field of view
-    SceneCamera sceneCamera(eye, to, 45.0f, 0.01f, 1000.0f, 0.02);
+    SceneCamera sceneCamera(eye, to, 30.0f, 0.1f, 100.0f, 0.02);
 
     CameraDefinition cameraDefinition(eye, to, 30, 32, 1.5, 1000);
 

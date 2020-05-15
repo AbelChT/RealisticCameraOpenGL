@@ -35,5 +35,5 @@ void main()
         sdata.color += ks*scol*pow(RV, ns);
     }
     sdata.tc = vtc;
-    gl_Position = view*vec4(avpos, 1.0);
+    gl_Position = view*transformed_vertex;
 }

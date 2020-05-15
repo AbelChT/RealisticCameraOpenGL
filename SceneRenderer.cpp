@@ -178,14 +178,14 @@ void reshapeScene(int w, int h) {
  * @param world_ro
  */
 void renderFrameIntoDefaultFrameBuffer(const int w, const int h, const glm::vec3 &eye, const glm::vec3 &to,
-                                       float fieldOfView) {
+                                       float fieldOfView, float zNear, float zFar) {
     std::cout << "renderFrameIntoDefaultFrameBuffer" << std::endl;
 
     if (h <= 0 || w <= 0) return;
 
     float aspect = float(w) / float(h);
 
-    glm::mat4 pers = glm::perspective(fieldOfView, aspect, 0.01f, 1000.0f);
+    glm::mat4 pers = glm::perspective(fieldOfView, aspect, zNear, zFar);
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -270,7 +270,7 @@ void accumulateTexturesIntoDefaultFrameBuffer(GLuint accumulatorTexColorBuffer, 
 }
 
 
-void renderFrameWithFieldOfView(int w, int h) {
+void renderFrameWithFieldOfViewAlgorithm1(int w, int h) {
     std::clock_t c_start = std::clock();
     auto t_start = std::chrono::high_resolution_clock::now();
 
@@ -302,6 +302,10 @@ void renderFrameWithFieldOfView(int w, int h) {
 
     glm::vec3 axis = glm::normalize(sceneCamera.position - sceneCamera.lookAt);
 
+    float zNear = sceneCamera.zNear;
+
+    float zFar = sceneCamera.zFar;
+
     for (int i = 0; i < numberOfFrames; i++) {
         float distanceFromO = firstStepDistanceFromO + ((float) i) * stepSize;
         double tan_b = ((defaultDistanceFromO) * tan((defaultFieldOfView * M_PI) / 180.0)) / distanceFromO;
@@ -309,7 +313,75 @@ void renderFrameWithFieldOfView(int w, int h) {
 
         glm::vec3 eye = to + distanceFromO * axis;
 
-        renderFrameIntoDefaultFrameBuffer(w, h, eye, to, fieldOfView);
+        renderFrameIntoDefaultFrameBuffer(w, h, eye, to, fieldOfView, zNear, zFar);
+
+        glBindTexture(GL_TEXTURE_2D_ARRAY, accumulatorTexColorBuffer);
+        glCopyTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, i, 0, 0, w, h);
+    }
+
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    accumulateTexturesIntoDefaultFrameBuffer(accumulatorTexColorBuffer, numberOfFrames);
+
+    glDeleteTextures(1, &accumulatorTexColorBuffer);
+
+    std::clock_t c_end = std::clock();
+    auto t_end = std::chrono::high_resolution_clock::now();
+
+    // Print used time
+    std::cout << "CPU time used: "
+              << 1000.0 * (c_end - c_start) / CLOCKS_PER_SEC
+              << " ms\n";
+    std::cout << "Wall clock time passed: "
+              << std::chrono::duration_cast<std::chrono::milliseconds>(t_end - t_start).count()
+              << " ms\n";
+}
+
+void renderFrameWithFieldOfViewAlgorithm2(int w, int h) {
+    std::clock_t c_start = std::clock();
+    auto t_start = std::chrono::high_resolution_clock::now();
+
+    const int numberOfFrames = 16;
+    GLuint accumulatorTexColorBuffer;
+    glGenTextures(1, &accumulatorTexColorBuffer);
+    glActiveTexture(GL_TEXTURE0);
+
+    // Generate texture for the accumulator buffer
+    glBindTexture(GL_TEXTURE_2D_ARRAY, accumulatorTexColorBuffer);
+    glTexStorage3D(GL_TEXTURE_2D_ARRAY, 1, GL_RGB8, w, h, numberOfFrames);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+
+    // Unbind texture
+    glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
+
+    float defaultDistanceFromO = glm::distance(sceneCamera.position, sceneCamera.lookAt);
+    float defaultFieldOfView = sceneCamera.fieldOfView;
+
+    float stepSize = 0.00007f;
+    // float stepSize = 0.0004f;
+
+    float firstStepDistanceFromO = defaultDistanceFromO - ((float) numberOfFrames / 2.0) * stepSize;
+
+    glm::vec3 to = sceneCamera.lookAt;
+
+    glm::vec3 axis = glm::normalize(sceneCamera.position - sceneCamera.lookAt);
+
+    float zNear = sceneCamera.zNear;
+
+    float zFar = sceneCamera.zFar;
+
+    for (int i = 0; i < numberOfFrames; i++) {
+        float distanceFromO = firstStepDistanceFromO + ((float) i) * stepSize;
+        double tan_b = ((defaultDistanceFromO) * tan((defaultFieldOfView * M_PI) / 180.0)) / distanceFromO;
+        float fieldOfView = (float) ((atan(tan_b) * 180.0) / M_PI);
+
+        glm::vec3 eye = to + distanceFromO * axis;
+
+        renderFrameIntoDefaultFrameBuffer(w, h, eye, to, fieldOfView, zNear, zFar);
+
         glBindTexture(GL_TEXTURE_2D_ARRAY, accumulatorTexColorBuffer);
         glCopyTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, i, 0, 0, w, h);
     }
@@ -334,8 +406,9 @@ void renderFrameWithFieldOfView(int w, int h) {
 
 void renderFrame(int w, int h, bool withFieldOfView) {
     if (withFieldOfView) {
-        renderFrameWithFieldOfView(w, h);
+        renderFrameWithFieldOfViewAlgorithm2(w, h);
     } else {
-        renderFrameIntoDefaultFrameBuffer(w, h, sceneCamera.position, sceneCamera.lookAt, sceneCamera.fieldOfView);
+        renderFrameIntoDefaultFrameBuffer(w, h, sceneCamera.position, sceneCamera.lookAt, sceneCamera.fieldOfView,
+                                          sceneCamera.zNear, sceneCamera.zFar);
     }
 }

@@ -57,7 +57,7 @@ void initEngine() {
 
     glm::vec3 to(eye.x - sin(glm::radians(cameraRotationX)), 0, eye.z - cos(glm::radians(cameraRotationX)));
 
-    SceneCamera sceneCamera(eye, to, 45.0f, 0.1f, 1000.0f);
+    SceneCamera sceneCamera(eye, to, 45.0f, 0.01f, 1000.0f, 0.01);
 
     // Objects definition
     vector<ObjectDescription> sceneObjects{

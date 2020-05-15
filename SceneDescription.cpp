@@ -15,7 +15,7 @@ SceneCamera cameraDefinitionToSceneCamera(CameraDefinition cameraDefinition) {
             (atan2(cameraDefinition.sensorSize, 2.0f * cameraDefinition.focalLength) * 360.0f) / (float) M_PI;
     float zNear = cameraDefinition.focalLength / 1000.0f;
     float zFar = cameraDefinition.zFar;
-    float rotationRadius = (cameraDefinition.focalLength / cameraDefinition.fStop) / 1000;
+    float rotationRadius = (cameraDefinition.focalLength / cameraDefinition.fStop) / (1000 * 2);
     return SceneCamera(position, lookAt, fieldOfView, zNear, zFar, rotationRadius);
 }
 

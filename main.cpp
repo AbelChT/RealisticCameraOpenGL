@@ -43,8 +43,6 @@ void initEngine() {
     float world_ph = 0.0;
     float world_th = 30.0;
 
-    float world_ro = 1.0;
-
     const float ph = glm::radians(world_ph);
     const float th = glm::radians(world_th);
 

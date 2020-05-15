@@ -201,6 +201,8 @@ void renderFrameIntoDefaultFrameBuffer(const int w, const int h, const glm::vec3
     GLuint ks_loc = glGetUniformLocation(gourdProgramId, "ks");
     GLuint scol_loc = glGetUniformLocation(gourdProgramId, "scol");
     GLuint ns_loc = glGetUniformLocation(gourdProgramId, "ns");
+    GLuint textureflg_loc = glGetUniformLocation(gourdProgramId, "textureflg");
+    GLuint colorflg_loc = glGetUniformLocation(gourdProgramId, "colorflg");
 
     glUniform3fv(light_loc, 1, glm::value_ptr(light));
     glUniform1f(kd_loc, 0.5f);
@@ -220,6 +222,10 @@ void renderFrameIntoDefaultFrameBuffer(const int w, const int h, const glm::vec3
         glEnableVertexAttribArray(0);
         glEnableVertexAttribArray(1);
         glEnableVertexAttribArray(2);
+
+        // Object color and texture selection
+        glUniform1i(textureflg_loc, sceneObject.useTexture);
+        glUniform1i(colorflg_loc, sceneObject.useColor);
 
         // Object transformations
         auto transformationsOfObject = glm::identity<glm::mat4>();

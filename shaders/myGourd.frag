@@ -1,7 +1,10 @@
 #version 420 core
 layout(binding=1) uniform sampler2D tex;
-// uniform bool texflg;
-// uniform bool envflg;
+
+// Texture or color controller
+uniform bool textureflg;
+uniform bool colorflg;
+
 in SDATA
 {
     vec3 color;
@@ -10,6 +13,11 @@ in SDATA
 out vec4 color;
 void main()
 {
-    // color = vec4(sdata.color, 1.0);
-    color = texture(tex, sdata.tc.st);
+    if (textureflg && !colorflg){
+        color = texture(tex, sdata.tc.st);
+    } else if (!textureflg && colorflg){
+        color = vec4(sdata.color, 1.0);
+    } else {
+        color = texture(tex, sdata.tc.st) * 0.5 + vec4(sdata.color, 1.0) * 0.5;
+    }
 }

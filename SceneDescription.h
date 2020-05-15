@@ -9,6 +9,7 @@
 #include <vector>
 #include <list>
 #include <glm/vec3.hpp>
+#include <cmath>
 #include "base_code/png.h"
 
 using namespace std;
@@ -27,8 +28,7 @@ public:
 
     // Constructor
     SceneMesh(vector<glm::vec3> vertices, vector<glm::vec3> normals,
-              vector<glm::vec3> texturePositions) : vertices(std::move(vertices)), normals(std::move(normals)),
-                                                    texture_positions(std::move(texturePositions)) {}
+              vector<glm::vec3> texturePositions) ;
 };
 
 
@@ -53,38 +53,44 @@ public:
     // Rotation radius
     float rotationRadius;
 
-    explicit SceneCamera() : position(glm::vec3(0, 0, 0)), lookAt(glm::vec3(0, 0, 0)), fieldOfView(0), zNear(0),
-                             zFar(0), rotationRadius(0) {}
+    // Constructor
+    explicit SceneCamera();
 
+    // Constructor
     SceneCamera(const glm::vec3 &position, const glm::vec3 &lookAt, float fieldOfView, float zNear, float zFar,
-                float rotationRadius)
-            : position(position), lookAt(lookAt), fieldOfView(fieldOfView), zNear(zNear), zFar(zFar),
-              rotationRadius(rotationRadius) {}
+                float rotationRadius);
 };
 
 // Parameters that define a camera in the real world
 struct CameraDefinition {
 public:
-    // Position of the scene camera
+    // Position of the scene camera (meters)
     glm::vec3 position;
 
-    // Look at
+    // Look at position (meters)
     glm::vec3 lookAt;
 
-    // Large of the film
-    float filmLarge;
+    // TODO: Delete lookAt and add this two parameters. With them we can obtain lookAt and up
+//    // Rotation of the camera (degrees)
+//    glm::vec3 cameraRotation;
+//
+//    // Distance of the object on focus (meters)
+//    float focusDistance;
 
-    // Distance to the film
-    float filmDistance;
+    // Horizontal large of the film (millimeters)
+    float sensorSize;
 
-    // f-stop
+    // Distance between the lens and the film (millimeters)
+    float focalLength;
+
+    // f-stop (units)
     float fStop;
 
-    // TODO: Should have a function to obtain a SceneCamera
-    // Constructor
-    CameraDefinition(const glm::vec3 &position, const glm::vec3 &lookAt, float filmLarge, float filmDistance,
-                     float fStop)
-            : position(position), lookAt(lookAt), filmLarge(filmLarge), filmDistance(filmDistance), fStop(fStop) {}
+    // Furthest distance the camera capture (meters)
+    float zFar;
+
+    CameraDefinition(const glm::vec3 &position, const glm::vec3 &lookAt, float sensorSize, float focalLength,
+                     float fStop, float zFar);
 };
 
 // Represent a light in the scene
@@ -94,7 +100,7 @@ public:
     glm::vec3 position;
 
     // Constructor
-    explicit SceneLight(const glm::vec3 &position) : position(position) {}
+    explicit SceneLight(const glm::vec3 &position);
 };
 
 struct ObjectDescription {
@@ -127,8 +133,7 @@ public:
     // Constructor
     ObjectDescription(const glm::vec3 &position, const glm::vec3 &rotation, const glm::vec3 &scale,
                       const glm::ivec3 &color, bool useColor, bool useTexture,
-                      unsigned int meshIndex) : position(position), rotation(rotation), scale(scale), color(color),
-                                                useColor(useColor), useTexture(useTexture), meshIndex(meshIndex) {}
+                      unsigned int meshIndex);
 };
 
 // Description of the scene
@@ -153,10 +158,14 @@ public:
 
     // Constructor
     SceneDescription(vector<SceneMesh> meshes, PNG texture, vector<ObjectDescription> objects,
-                     const SceneLight &light, const SceneCamera &camera) : meshes(std::move(meshes)),
-                                                                           texture(std::move(texture)),
-                                                                           objects(std::move(objects)), light(light),
-                                                                           camera(camera) {}
+                     const SceneLight &light, const SceneCamera &camera);
 };
+
+/**
+ * Transform a camera definition to a sceneCamera
+ * @param cameraDefinition
+ * @return
+ */
+SceneCamera cameraDefinitionToSceneCamera(CameraDefinition cameraDefinition);
 
 #endif //TESTINGOPENGL_SCENEDESCRIPTION_H

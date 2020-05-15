@@ -1,3 +1,6 @@
+import math
+
+
 def obtain_d1_d2_from_parameters():
     d = 0.01
     r = 8.4
@@ -37,5 +40,11 @@ def obtain_f_n_from_parameters():
     print("D2:", d2)
 
 
+def obtain_camera_to():
+    o1 = (1, 0.4)
+    o3 = (o1[0] - math.sin(math.radians(80)), o1[1] - math.cos(math.radians(80)))
+    print(o3)
+
+
 if __name__ == '__main__':
-    obtain_f_n_from_parameters()
+    obtain_camera_to()

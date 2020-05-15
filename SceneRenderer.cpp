@@ -305,7 +305,7 @@ void renderFrameWithFieldOfViewAlgorithm1(int w, int h) {
     float defaultDistanceFromO = glm::distance(sceneCamera.position, sceneCamera.lookAt);
     float defaultFieldOfView = sceneCamera.fieldOfView;
 
-    float stepSize = 0.00007f;
+    float stepSize = 0.01f;
     // float stepSize = 0.0004f;
 
     float firstStepDistanceFromO = defaultDistanceFromO - ((float) numberOfFrames / 2.0) * stepSize;

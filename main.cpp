@@ -63,7 +63,7 @@ void initEngine() {
     // TODO: Solve error with field of view
     // SceneCamera sceneCamera(eye, to, 30.0f, 0.1f, 100.0f, 0.02);
 
-    CameraDefinition cameraDefinition(eye, to, 30, 32, 8, 1000);
+    CameraDefinition cameraDefinition(eye, to, 30, 32, 1,1000);
 
     // Obtain camera from parameters
     SceneCamera sceneCamera = cameraDefinitionToSceneCamera(cameraDefinition);
@@ -81,11 +81,11 @@ void initEngine() {
 //                              glm::vec3(1, 1, 1), glm::vec3(30, 30, 255),
 //                              false, true, 0)
             ObjectDescription(glm::vec3(0, -0.1, 0), glm::vec3(0, 0, 0),
-                              glm::vec3(1, 1, 1), glm::vec3(30, 30, 255),
-                              true, false, 0),
+                              glm::vec3(1, 1, 1), glm::vec3(205, 63, 33),
+                              false, true, 0),
             ObjectDescription(glm::vec3(0, 0.1, 0), glm::vec3(0, 0, 0),
                               glm::vec3(1, 1, 1), glm::vec3(30, 30, 255),
-                              true, false, 0),
+                              false, true, 0),
 
             ObjectDescription(glm::vec3(-0.2, -0.1, 0), glm::vec3(0, 0, 0),
                               glm::vec3(1, 1, 1), glm::vec3(30, 30, 255),

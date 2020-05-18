@@ -2,7 +2,6 @@
 // Created by abel on 28/4/20.
 //
 #include "SceneRenderer.h"
-#include "base_code/png.h"
 
 // Vertex array object
 vector<GLuint> vertexArrayObjects;

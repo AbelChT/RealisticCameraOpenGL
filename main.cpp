@@ -5,6 +5,9 @@
 #include <GLFW/glfw3.h>
 #include <array>
 #include <iostream>
+#include <filesystem>
+#include <algorithm>
+#include "libs/png.h"
 #include "SceneDescription.h"
 #include "SceneRenderer.h"
 #include "base_code/obj.h"
@@ -79,10 +82,10 @@ void initEngine() {
 //                              false, true, 0)
             ObjectDescription(glm::vec3(0, -0.1, 0), glm::vec3(0, 0, 0),
                               glm::vec3(1, 1, 1), glm::vec3(30, 30, 255),
-                              false, true, 0),
+                              true, false, 0),
             ObjectDescription(glm::vec3(0, 0.1, 0), glm::vec3(0, 0, 0),
                               glm::vec3(1, 1, 1), glm::vec3(30, 30, 255),
-                              false, true, 0),
+                              true, false, 0),
 
             ObjectDescription(glm::vec3(-0.2, -0.1, 0), glm::vec3(0, 0, 0),
                               glm::vec3(1, 1, 1), glm::vec3(30, 30, 255),
@@ -152,6 +155,22 @@ void callbackOpenGLKeyboard(GLFWwindow *win, int key, int s, int act, int mod) {
         case GLFW_KEY_R:
             style = !style;
             callbackOpenGLDisplay(win);
+            break;
+        case GLFW_KEY_S:
+            cout << "Callback save image" << endl;
+            int w, h;
+            glfwGetWindowSize(win, &w, &h);
+            vector<float> pixels(w * h * 3);
+            glReadPixels(0, 0, w, h, GL_RGB, GL_FLOAT, pixels.data());
+
+            // Create out directory
+            auto out_folder = filesystem::path("out");
+            create_directory(out_folder);
+
+            // Save image
+            PNG lib_png(w, h, pixels, true);
+            lib_png.save("out/rasterized_image.png");
+            cout << "Image saved" << endl;
             break;
     }
 }

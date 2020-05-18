@@ -17,6 +17,7 @@
 
 #include "SceneDescription.h"
 #include "OpenglUtils.h"
+#include "libs/png.h"
 
 void initSceneRenderer(const SceneDescription &sceneDescription);
 

@@ -10,7 +10,7 @@
 #include <list>
 #include <glm/vec3.hpp>
 #include <cmath>
-#include "base_code/png.h"
+#include "libs/png.h"
 
 using namespace std;
 

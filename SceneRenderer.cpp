@@ -31,9 +31,15 @@ const char gourdFsPath[] = "shaders/myGourd.frag";
 // Transfer from texture to the frameBuffer
 GLuint transferProgramId;
 
-// Transfer shader path
+// Transfer average shader path
 const char accumulateVsPath[] = "shaders/sumTextures.vert";
 const char accumulateFsPath[] = "shaders/sumTextures.frag";
+
+// Transfer from texture to the frameBuffer
+GLuint transferWeightedProgramId;
+
+// Transfer weighted shader
+const char accumulateWeightedFsPath[] = "shaders/sumWeightedTextures.frag";
 
 // screen texture VAO
 GLuint screenTextureVAO;
@@ -163,6 +169,13 @@ void initSceneRenderer(const SceneDescription &sceneDescription) {
     if (transferProgramId == 0) {
         std::cerr << "Program was not created for shader: Transfer" << std::endl;
     }
+
+    // Load transfer weighted shader
+    transferWeightedProgramId = createGLProgram(accumulateVsPath, accumulateWeightedFsPath);
+
+    if (transferWeightedProgramId == 0) {
+        std::cerr << "Program was not created for shader: Transfer weighted" << std::endl;
+    }
 }
 
 void reshapeScene(int w, int h) {
@@ -212,8 +225,6 @@ void renderFrameIntoDefaultFrameBuffer(const int w, const int h, const glm::vec3
     glUniform1f(ns_loc, 10.0f);
 
     glUniform3fv(eye_loc, 1, glm::value_ptr(eye));
-
-
 
     // Transform from model space to world space
 
@@ -280,11 +291,32 @@ void accumulateTexturesIntoDefaultFrameBuffer(GLuint accumulatorTexColorBuffer, 
     glDisableVertexAttribArray(1);
 }
 
+void accumulateWeightedTexturesIntoDefaultFrameBuffer(GLuint accumulatorTexColorBuffer, unsigned int numberOfNewFrames,
+                                                      unsigned int numberOfAccumulatedFrames) {
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    glUseProgram(transferWeightedProgramId);
+    glBindVertexArray(screenTextureVAO);
+    glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(1);
+
+    // Communicate the number of frames in the texture
+    GLuint numberOfFramesLoc = glGetUniformLocation(transferWeightedProgramId, "numberOfNewFrames");
+    glUniform1i(numberOfFramesLoc, numberOfNewFrames);
+
+    GLuint numberOfAccumulatedFramesLoc = glGetUniformLocation(transferWeightedProgramId, "numberOfAccumulatedFrames");
+    glUniform1i(numberOfAccumulatedFramesLoc, numberOfAccumulatedFrames);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D_ARRAY, accumulatorTexColorBuffer);
+
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+
+    glDisableVertexAttribArray(0);
+    glDisableVertexAttribArray(1);
+}
 
 void renderFrameWithFieldOfViewAlgorithm1(int w, int h) {
-    std::clock_t c_start = std::clock();
-    auto t_start = std::chrono::high_resolution_clock::now();
-
     const int numberOfFrames = 16;
     GLuint accumulatorTexColorBuffer;
     glGenTextures(1, &accumulatorTexColorBuffer);
@@ -335,23 +367,9 @@ void renderFrameWithFieldOfViewAlgorithm1(int w, int h) {
     accumulateTexturesIntoDefaultFrameBuffer(accumulatorTexColorBuffer, numberOfFrames);
 
     glDeleteTextures(1, &accumulatorTexColorBuffer);
-
-    std::clock_t c_end = std::clock();
-    auto t_end = std::chrono::high_resolution_clock::now();
-
-    // Print used time
-    std::cout << "CPU time used: "
-              << 1000.0 * (c_end - c_start) / CLOCKS_PER_SEC
-              << " ms\n";
-    std::cout << "Wall clock time passed: "
-              << std::chrono::duration_cast<std::chrono::milliseconds>(t_end - t_start).count()
-              << " ms\n";
 }
 
 void renderFrameWithFieldOfViewAlgorithm2(int w, int h) {
-    std::clock_t c_start = std::clock();
-    auto t_start = std::chrono::high_resolution_clock::now();
-
     const int numberOfFrames = 16;
     GLuint accumulatorTexColorBuffer;
     glGenTextures(1, &accumulatorTexColorBuffer);
@@ -402,8 +420,110 @@ void renderFrameWithFieldOfViewAlgorithm2(int w, int h) {
 
     accumulateTexturesIntoDefaultFrameBuffer(accumulatorTexColorBuffer, numberOfFrames);
 
-    glDeleteTextures(1, &accumulatorTexColorBuffer);
+    //accumulateWeightedTexturesIntoDefaultFrameBuffer(accumulatorTexColorBuffer, numberOfFrames, 1);
 
+    glDeleteTextures(1, &accumulatorTexColorBuffer);
+}
+
+void renderFrameWithFieldOfViewAlgorithm3(int w, int h) {
+    // Total number of images to take
+    const int numberOfFrames = 16;
+
+    // Total number of textures used
+    const int numberOfAccumulatedTextures = 6;
+
+    // Number of textures used for frames
+    const int numberOfFrameAccumulatedTextures = numberOfAccumulatedTextures - 1;
+
+    GLuint accumulatorTexColorBuffer;
+    glGenTextures(1, &accumulatorTexColorBuffer);
+    glActiveTexture(GL_TEXTURE0);
+
+    // Generate texture for the accumulator buffer
+    glBindTexture(GL_TEXTURE_2D_ARRAY, accumulatorTexColorBuffer);
+    glTexStorage3D(GL_TEXTURE_2D_ARRAY, 1, GL_RGB8, w, h, numberOfAccumulatedTextures);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+
+    // Unbind texture
+    glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
+
+    float fieldOfView = sceneCamera.fieldOfView;
+
+    glm::vec3 to = sceneCamera.lookAt;
+
+    glm::vec3 eye = sceneCamera.position;
+
+    glm::vec3 axis = glm::normalize(sceneCamera.position - sceneCamera.lookAt);
+
+    float zNear = sceneCamera.zNear;
+
+    float zFar = sceneCamera.zFar;
+
+    float rotationRadius = sceneCamera.rotationRadius;
+
+    glm::vec3 up = glm::vec3(0, 0, 1);
+
+    glm::vec3 right = glm::normalize(glm::cross(to - eye, up));
+    glm::vec3 p_up = glm::normalize(glm::cross(to - eye, right));
+
+    for (int i = 0; i < numberOfFrames; i++) {
+        glm::vec3 positionInCircle =
+                right * cosf(i * 2 * M_PI / numberOfFrames) + p_up * sinf(i * 2 * M_PI / numberOfFrames);
+
+        glm::vec3 renderEye = eye + rotationRadius * positionInCircle;
+        renderFrameIntoDefaultFrameBuffer(w, h, renderEye, to, fieldOfView, zNear, zFar);
+
+        const int texture_store_position = i % numberOfFrameAccumulatedTextures;
+        glBindTexture(GL_TEXTURE_2D_ARRAY, accumulatorTexColorBuffer);
+        glCopyTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, texture_store_position + 1, 0, 0, w, h);
+
+        if (texture_store_position == numberOfFrameAccumulatedTextures - 1) {
+            cout << "Frame: " << i << " accumulated" << endl;
+            // Last texture that can be stored
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            accumulateWeightedTexturesIntoDefaultFrameBuffer(accumulatorTexColorBuffer,
+                                                             numberOfFrameAccumulatedTextures,
+                                                             i - numberOfFrameAccumulatedTextures + 1);
+
+            if (i < numberOfFrames - 1) {
+                cout << "Frame: " << i << " accumulated in 0" << endl;
+
+                // In the last frame it is no need to copy the texture (it is displayed)
+                glBindTexture(GL_TEXTURE_2D_ARRAY, accumulatorTexColorBuffer);
+                glCopyTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, 0, 0, 0, w, h);
+            }
+        }
+    }
+
+    if (numberOfFrames % numberOfFrameAccumulatedTextures != 0) {
+        // In case of remaining textures, display them
+        int remaining_textures = numberOfFrames % numberOfFrameAccumulatedTextures;
+        // Do the remaining accumulation
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        accumulateWeightedTexturesIntoDefaultFrameBuffer(accumulatorTexColorBuffer, remaining_textures,
+                                                         numberOfFrames - remaining_textures + 1);
+    }
+
+    glDeleteTextures(1, &accumulatorTexColorBuffer);
+}
+
+void renderFrame(int w, int h, bool withFieldOfView) {
+    // Start clock
+    std::clock_t c_start = std::clock();
+    auto t_start = std::chrono::high_resolution_clock::now();
+
+    // Do render
+    if (withFieldOfView) {
+        renderFrameWithFieldOfViewAlgorithm2(w, h);
+    } else {
+        renderFrameIntoDefaultFrameBuffer(w, h, sceneCamera.position, sceneCamera.lookAt, sceneCamera.fieldOfView,
+                                          sceneCamera.zNear, sceneCamera.zFar);
+    }
+
+    // End clock
     std::clock_t c_end = std::clock();
     auto t_end = std::chrono::high_resolution_clock::now();
 
@@ -414,13 +534,4 @@ void renderFrameWithFieldOfViewAlgorithm2(int w, int h) {
     std::cout << "Wall clock time passed: "
               << std::chrono::duration_cast<std::chrono::milliseconds>(t_end - t_start).count()
               << " ms\n";
-}
-
-void renderFrame(int w, int h, bool withFieldOfView) {
-    if (withFieldOfView) {
-        renderFrameWithFieldOfViewAlgorithm2(w, h);
-    } else {
-        renderFrameIntoDefaultFrameBuffer(w, h, sceneCamera.position, sceneCamera.lookAt, sceneCamera.fieldOfView,
-                                          sceneCamera.zNear, sceneCamera.zFar);
-    }
 }

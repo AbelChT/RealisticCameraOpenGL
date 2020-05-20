@@ -426,8 +426,21 @@ void renderFrameWithFieldOfViewAlgorithm2(int w, int h) {
 }
 
 void renderFrameWithFieldOfViewAlgorithm3(int w, int h) {
+    // Number of circles
+    const int numberOfCircles = 3;
+
+    // Number of frames took in the lowest circle
+    const int numberOfFramesLowestCircle = 4;
+
     // Total number of images to take
-    const int numberOfFrames = 16;
+    int numberOfFrames = numberOfFramesLowestCircle;
+
+    for (int j = 1; j < numberOfCircles; ++j) {
+        numberOfFrames += pow(numberOfFramesLowestCircle, j * 2);
+    }
+
+    // Position of the camera
+
 
     // Total number of textures used
     const int numberOfAccumulatedTextures = 6;
@@ -510,18 +523,21 @@ void renderFrameWithFieldOfViewAlgorithm3(int w, int h) {
     glDeleteTextures(1, &accumulatorTexColorBuffer);
 }
 
-void renderFrame(int w, int h, bool withFieldOfView) {
+void renderFrame(int w, int h, bool withDepthOfView) {
     // Start clock
     std::clock_t c_start = std::clock();
     auto t_start = std::chrono::high_resolution_clock::now();
 
     // Do render
-    if (withFieldOfView) {
-        renderFrameWithFieldOfViewAlgorithm2(w, h);
+    if (withDepthOfView) {
+        renderFrameWithFieldOfViewAlgorithm3(w, h);
     } else {
         renderFrameIntoDefaultFrameBuffer(w, h, sceneCamera.position, sceneCamera.lookAt, sceneCamera.fieldOfView,
                                           sceneCamera.zNear, sceneCamera.zFar);
     }
+
+    // Finish only should be used if we want to measure the time
+    glFinish();
 
     // End clock
     std::clock_t c_end = std::clock();
@@ -529,7 +545,7 @@ void renderFrame(int w, int h, bool withFieldOfView) {
 
     // Print used time
     std::cout << "CPU time used: "
-              << 1000.0 * (c_end - c_start) / CLOCKS_PER_SEC
+              << 1000.0 * (double) (c_end - c_start) / CLOCKS_PER_SEC
               << " ms\n";
     std::cout << "Wall clock time passed: "
               << std::chrono::duration_cast<std::chrono::milliseconds>(t_end - t_start).count()

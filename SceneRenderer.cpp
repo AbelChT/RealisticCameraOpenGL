@@ -427,20 +427,44 @@ void renderFrameWithFieldOfViewAlgorithm2(int w, int h) {
 
 void renderFrameWithFieldOfViewAlgorithm3(int w, int h) {
     // Number of circles
-    const int numberOfCircles = 3;
+    const int numberOfCircles = 6;
 
     // Number of frames took in the lowest circle
     const int numberOfFramesLowestCircle = 4;
 
     // Total number of images to take
-    int numberOfFrames = numberOfFramesLowestCircle;
+    const int numberOfFrames = ((numberOfCircles * (numberOfCircles + 1)) / 2) * numberOfFramesLowestCircle;
 
-    for (int j = 1; j < numberOfCircles; ++j) {
-        numberOfFrames += pow(numberOfFramesLowestCircle, j * 2);
-    }
+    // Camera parameters
+    float fieldOfView = sceneCamera.fieldOfView;
+
+    glm::vec3 to = sceneCamera.lookAt;
+
+    glm::vec3 eye = sceneCamera.position;
+
+    glm::vec3 axis = glm::normalize(sceneCamera.position - sceneCamera.lookAt);
+
+    float zNear = sceneCamera.zNear;
+
+    float zFar = sceneCamera.zFar;
+
+    glm::vec3 up = glm::vec3(0, 0, 1);
+
+    glm::vec3 right = glm::normalize(glm::cross(to - eye, up));
+    glm::vec3 p_up = glm::normalize(glm::cross(to - eye, right));
 
     // Position of the camera
-
+    vector<glm::vec3> camera_position(numberOfFrames);
+    for (int j = 0; j < numberOfCircles; ++j) {
+        float rotationRadius = sceneCamera.rotationRadius * ((float) (j + 1) / (float) numberOfCircles);
+        int position_offset = ((j * (j + 1)) / 2) * numberOfFramesLowestCircle;
+        for (int k = 0; k < (j + 1) * numberOfFramesLowestCircle; ++k) {
+            glm::vec3 positionInCircle =
+                    right * cosf(k * 2 * M_PI / numberOfFrames) + p_up * sinf(k * 2 * M_PI / numberOfFrames);
+            glm::vec3 renderEye = eye + rotationRadius * positionInCircle;
+            camera_position[position_offset + k] = renderEye;
+        }
+    }
 
     // Total number of textures used
     const int numberOfAccumulatedTextures = 6;
@@ -463,30 +487,8 @@ void renderFrameWithFieldOfViewAlgorithm3(int w, int h) {
     // Unbind texture
     glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
 
-    float fieldOfView = sceneCamera.fieldOfView;
-
-    glm::vec3 to = sceneCamera.lookAt;
-
-    glm::vec3 eye = sceneCamera.position;
-
-    glm::vec3 axis = glm::normalize(sceneCamera.position - sceneCamera.lookAt);
-
-    float zNear = sceneCamera.zNear;
-
-    float zFar = sceneCamera.zFar;
-
-    float rotationRadius = sceneCamera.rotationRadius;
-
-    glm::vec3 up = glm::vec3(0, 0, 1);
-
-    glm::vec3 right = glm::normalize(glm::cross(to - eye, up));
-    glm::vec3 p_up = glm::normalize(glm::cross(to - eye, right));
-
     for (int i = 0; i < numberOfFrames; i++) {
-        glm::vec3 positionInCircle =
-                right * cosf(i * 2 * M_PI / numberOfFrames) + p_up * sinf(i * 2 * M_PI / numberOfFrames);
-
-        glm::vec3 renderEye = eye + rotationRadius * positionInCircle;
+        glm::vec3 renderEye = camera_position[i];
         renderFrameIntoDefaultFrameBuffer(w, h, renderEye, to, fieldOfView, zNear, zFar);
 
         const int texture_store_position = i % numberOfFrameAccumulatedTextures;

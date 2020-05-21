@@ -169,7 +169,7 @@ void callbackOpenGLKeyboard(GLFWwindow *win, int key, int s, int act, int mod) {
 
             // Save image
             PNG lib_png(w, h, pixels, true);
-            lib_png.save("out/rasterized_image_method_4.png");
+            lib_png.save("out/rasterized_dof_area.png");
             cout << "Image saved" << endl;
             break;
     }

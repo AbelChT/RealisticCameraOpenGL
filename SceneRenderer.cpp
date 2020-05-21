@@ -541,14 +541,8 @@ void renderFrameWithFieldOfViewAlgorithm3(int w, int h) {
 }
 
 void renderFrameWithFieldOfViewAlgorithm4(int w, int h) {
-    // Number of circles
-    const int numberOfCircles = 6;
-
-    // Number of frames took in the lowest circle
-    const int numberOfFramesLowestCircle = 4;
-
     // Total number of images to take
-    const int numberOfFrames = ((numberOfCircles * (numberOfCircles + 1)) / 2) * numberOfFramesLowestCircle;
+    const int numberOfFrames = 84;
 
     // Camera parameters
     float fieldOfView = sceneCamera.fieldOfView;

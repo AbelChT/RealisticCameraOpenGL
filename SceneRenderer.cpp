@@ -3,6 +3,21 @@
 //
 #include "SceneRenderer.h"
 
+#include "OpenglUtils.h"
+#include "libs/png.h"
+
+#include <GL/glew.h>
+#include <GL/gl.h>
+#include <GL/glu.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <chrono>
+#include <ctime>
+#include <cmath>
+#include <random>
+#include <iostream>
+
 // Vertex array object
 vector<GLuint> vertexArrayObjects;
 
@@ -525,6 +540,120 @@ void renderFrameWithFieldOfViewAlgorithm3(int w, int h) {
     glDeleteTextures(1, &accumulatorTexColorBuffer);
 }
 
+void renderFrameWithFieldOfViewAlgorithm4(int w, int h) {
+    // Number of circles
+    const int numberOfCircles = 6;
+
+    // Number of frames took in the lowest circle
+    const int numberOfFramesLowestCircle = 4;
+
+    // Total number of images to take
+    const int numberOfFrames = ((numberOfCircles * (numberOfCircles + 1)) / 2) * numberOfFramesLowestCircle;
+
+    // Camera parameters
+    float fieldOfView = sceneCamera.fieldOfView;
+
+    glm::vec3 to = sceneCamera.lookAt;
+
+    glm::vec3 eye = sceneCamera.position;
+
+    glm::vec3 axis = glm::normalize(sceneCamera.position - sceneCamera.lookAt);
+
+    float zNear = sceneCamera.zNear;
+
+    float zFar = sceneCamera.zFar;
+
+    // obtain a seed from the system clock:
+    unsigned seed1 = std::chrono::system_clock::now().time_since_epoch().count();
+
+    // Random generator
+    std::default_random_engine generator(seed1);
+    std::uniform_real_distribution<double> distribution(0.0, 1.0);
+
+    // Up, right vectors
+    glm::vec3 up = glm::vec3(0, 0, 1);
+
+    glm::vec3 right = glm::normalize(glm::cross(to - eye, up));
+    glm::vec3 p_up = glm::normalize(glm::cross(to - eye, right));
+
+    // Position of the camera
+    vector<glm::vec3> camera_position(numberOfFrames);
+
+    for (int j = 0; j < numberOfFrames; ++j) {
+        // Obtain position in the circle
+        auto a = (float) (distribution(generator) * 2 * M_PI);
+        auto r = (float) (sceneCamera.rotationRadius * sqrt(distribution(generator)));
+
+        float x = r * cosf(a);
+        float y = r * sinf(a);
+
+        glm::vec3 positionInCircle = right * x + p_up * y;
+
+        glm::vec3 renderEye = eye + positionInCircle;
+
+        // Add to camera positions
+        camera_position[j] = renderEye;
+    }
+
+    // Total number of textures used
+    const int numberOfAccumulatedTextures = 6;
+
+    // Number of textures used for frames
+    const int numberOfFrameAccumulatedTextures = numberOfAccumulatedTextures - 1;
+
+    GLuint accumulatorTexColorBuffer;
+    glGenTextures(1, &accumulatorTexColorBuffer);
+    glActiveTexture(GL_TEXTURE0);
+
+    // Generate texture for the accumulator buffer
+    glBindTexture(GL_TEXTURE_2D_ARRAY, accumulatorTexColorBuffer);
+    glTexStorage3D(GL_TEXTURE_2D_ARRAY, 1, GL_RGB8, w, h, numberOfAccumulatedTextures);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+
+    // Unbind texture
+    glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
+
+    for (int i = 0; i < numberOfFrames; i++) {
+        glm::vec3 renderEye = camera_position[i];
+        renderFrameIntoDefaultFrameBuffer(w, h, renderEye, to, fieldOfView, zNear, zFar);
+
+        const int texture_store_position = i % numberOfFrameAccumulatedTextures;
+        glBindTexture(GL_TEXTURE_2D_ARRAY, accumulatorTexColorBuffer);
+        glCopyTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, texture_store_position + 1, 0, 0, w, h);
+
+        if (texture_store_position == numberOfFrameAccumulatedTextures - 1) {
+            cout << "Frame: " << i << " accumulated" << endl;
+            // Last texture that can be stored
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            accumulateWeightedTexturesIntoDefaultFrameBuffer(accumulatorTexColorBuffer,
+                                                             numberOfFrameAccumulatedTextures,
+                                                             i - numberOfFrameAccumulatedTextures + 1);
+
+            if (i < numberOfFrames - 1) {
+                cout << "Frame: " << i << " accumulated in 0" << endl;
+
+                // In the last frame it is no need to copy the texture (it is displayed)
+                glBindTexture(GL_TEXTURE_2D_ARRAY, accumulatorTexColorBuffer);
+                glCopyTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, 0, 0, 0, w, h);
+            }
+        }
+    }
+
+    if (numberOfFrames % numberOfFrameAccumulatedTextures != 0) {
+        // In case of remaining textures, display them
+        int remaining_textures = numberOfFrames % numberOfFrameAccumulatedTextures;
+        // Do the remaining accumulation
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        accumulateWeightedTexturesIntoDefaultFrameBuffer(accumulatorTexColorBuffer, remaining_textures,
+                                                         numberOfFrames - remaining_textures + 1);
+    }
+
+    glDeleteTextures(1, &accumulatorTexColorBuffer);
+}
+
 void renderFrame(int w, int h, bool withDepthOfView) {
     // Start clock
     std::clock_t c_start = std::clock();
@@ -532,7 +661,7 @@ void renderFrame(int w, int h, bool withDepthOfView) {
 
     // Do render
     if (withDepthOfView) {
-        renderFrameWithFieldOfViewAlgorithm3(w, h);
+        renderFrameWithFieldOfViewAlgorithm4(w, h);
     } else {
         renderFrameIntoDefaultFrameBuffer(w, h, sceneCamera.position, sceneCamera.lookAt, sceneCamera.fieldOfView,
                                           sceneCamera.zNear, sceneCamera.zFar);

@@ -3,6 +3,11 @@
 //
 #include "SceneDescription.h"
 
+#include <utility>
+
+#include <list>
+#include <cmath>
+
 /**
  * Transform a camera definition to a sceneCamera
  * @param cameraDefinition

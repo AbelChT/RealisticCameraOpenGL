@@ -3,6 +3,9 @@
 //
 #include "OpenglUtils.h"
 
+#include <fstream>
+#include <iostream>
+
 /**
  * Load a shader from a file
  * @param file_path Path of the shader

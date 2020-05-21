@@ -5,12 +5,10 @@
 #ifndef TESTINGOPENGL_SCENEDESCRIPTION_H
 #define TESTINGOPENGL_SCENEDESCRIPTION_H
 
-#include <utility>
-#include <vector>
-#include <list>
-#include <glm/vec3.hpp>
-#include <cmath>
 #include "libs/png.h"
+
+#include <vector>
+#include <glm/vec3.hpp>
 
 using namespace std;
 
@@ -28,7 +26,7 @@ public:
 
     // Constructor
     SceneMesh(vector<glm::vec3> vertices, vector<glm::vec3> normals,
-              vector<glm::vec3> texturePositions) ;
+              vector<glm::vec3> texturePositions);
 };
 
 

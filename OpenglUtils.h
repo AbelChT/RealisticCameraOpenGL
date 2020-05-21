@@ -6,8 +6,6 @@
 #define TESTINGOPENGL_OPENGLUTILS_H
 
 #include <string>
-#include <fstream>
-#include <iostream>
 #include <GL/glew.h>
 
 /**

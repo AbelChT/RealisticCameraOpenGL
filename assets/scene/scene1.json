@@ -2,26 +2,65 @@
   "name": "Can scene",
   "textures": [
     {
-      "id": 0,
+      "name": "checker",
       "path": "assets/textures/checker.png"
     }
   ],
   "meshes": [
     {
-      "id": 0,
-      "path": "assets/meshes/can.obj"
+      "name": "can",
+      "path": "assets/meshes/can.obj",
+      "rotate": true,
+      "uniform": false
+    }
+  ],
+  "materials": [
+    {
+      "name": "mate_blue",
+      "color": {
+        "r": 255,
+        "g": 255,
+        "b": 255
+      }
     }
   ],
   "objects": [
     {
-      "id": 0,
       "position": {
         "x": 0,
         "y": 0,
         "z": 0
-      }
-    },
-    {
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "texture_name": "checker",
+      "material_name": "mate_blue"
     }
-  ]
+  ],
+  "light": {
+    "position": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    }
+  },
+  "camera": {
+    "position": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "look_at": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "sensor_size": 45.0,
+    "focal_length": 13.0,
+    "f_stop": 1.3,
+    "z_far": 1000
+  }
 }

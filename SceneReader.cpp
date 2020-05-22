@@ -2,9 +2,39 @@
 // Created by abel on 22/5/20.
 //
 
+#include <fstream>
+#include <nlohmann/json.hpp>
+#include <iostream>
+#include <string>
+#include <map>
 #include "SceneReader.h"
 
-SceneDescription readScene(std::string sceneName){
+using json = nlohmann::json;
+
+//SceneDescription readScene(std::string sceneName){
+void readScene(std::string sceneName) {
+    // read a JSON file
+    std::ifstream inputJson(sceneName);
+    json jsonDeserialized;
+    inputJson >> jsonDeserialized;
+
+    try {
+        std::map<std::string, int> m;
+
+        // Load textures
+        auto textures = jsonDeserialized["textures"];
+        for (auto &i: textures) {
+            auto textureName = i["name"].get<std::string>();
+            auto texturePath = i["path"].get<std::string>();
+            // TODO: Save values in the has
+        }
+    }
+    catch (json::exception &e) {
+        // output exception information
+        std::cout << "message: " << e.what() << '\n'
+                  << "exception id: " << e.id << std::endl;
+    }
+
 
 //    // Meshes definition
 //    glm::mat4 xf = glm::rotate(glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));

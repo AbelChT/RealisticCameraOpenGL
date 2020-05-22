@@ -7,6 +7,6 @@
 #include "SceneDescription.h"
 #include <string>
 
-SceneDescription readScene(std::string sceneName);
+void readScene(std::string sceneName);
 
 #endif //TESTINGOPENGL_SCENEREADER_H

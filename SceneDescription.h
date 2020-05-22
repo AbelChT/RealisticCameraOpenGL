@@ -120,7 +120,7 @@ public:
     bool useColor;
 
     // Texture index of the object
-    // unsigned int textureIndex;
+    unsigned int textureIndex;
 
     // Use texture
     bool useTexture;
@@ -130,7 +130,7 @@ public:
 
     // Constructor
     ObjectDescription(const glm::vec3 &position, const glm::vec3 &rotation, const glm::vec3 &scale,
-                      const glm::ivec3 &color, bool useColor, bool useTexture,
+                      const glm::ivec3 &color, bool useColor, unsigned int textureIndex, bool useTexture,
                       unsigned int meshIndex);
 };
 
@@ -141,22 +141,20 @@ public:
     vector<SceneMesh> meshes;
 
     // Textures in the scene
-    // vector<PNG> textures;
-    // TODO to improve: Include multiple textures
-    PNG texture; // Only one texture from now
+    vector<PNG> textures;
 
     // Objects in the scene
     vector<ObjectDescription> objects;
 
-    // Light in the scene
+    // Light in the scene (only one from now)
     SceneLight light;
 
     // Camera in the scene
     SceneCamera camera;
 
     // Constructor
-    SceneDescription(vector<SceneMesh> meshes, PNG texture, vector<ObjectDescription> objects,
-                     const SceneLight &light, const SceneCamera &camera);
+    SceneDescription(vector<SceneMesh> meshes, vector<PNG> textures, vector<ObjectDescription> objects,
+                     const SceneLight &lights, const SceneCamera &camera);
 };
 
 /**

@@ -5,7 +5,6 @@
 
 #include <utility>
 
-#include <list>
 #include <cmath>
 
 /**
@@ -45,15 +44,15 @@ CameraDefinition::CameraDefinition(const glm::vec3 &position, const glm::vec3 &l
 SceneLight::SceneLight(const glm::vec3 &position) : position(position) {}
 
 ObjectDescription::ObjectDescription(const glm::vec3 &position, const glm::vec3 &rotation, const glm::vec3 &scale,
-                                     const glm::ivec3 &color, bool useColor, bool useTexture,
+                                     const glm::ivec3 &color, bool useColor, unsigned int textureIndex, bool useTexture,
                                      unsigned int meshIndex) : position(position), rotation(rotation), scale(scale),
                                                                color(color),
                                                                useColor(useColor), useTexture(useTexture),
                                                                meshIndex(meshIndex) {}
 
-SceneDescription::SceneDescription(vector<SceneMesh> meshes, PNG texture, vector<ObjectDescription> objects,
+SceneDescription::SceneDescription(vector<SceneMesh> meshes, vector<PNG> textures, vector<ObjectDescription> objects,
                                    const SceneLight &light, const SceneCamera &camera) : meshes(std::move(meshes)),
-                                                                                         texture(std::move(texture)),
+                                                                                         textures(std::move(textures)),
                                                                                          objects(std::move(objects)),
                                                                                          light(light),
                                                                                          camera(camera) {}

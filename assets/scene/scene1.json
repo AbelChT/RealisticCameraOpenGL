@@ -1,0 +1,27 @@
+{
+  "name": "Can scene",
+  "textures": [
+    {
+      "id": 0,
+      "path": "assets/textures/checker.png"
+    }
+  ],
+  "meshes": [
+    {
+      "id": 0,
+      "path": "assets/meshes/can.obj"
+    }
+  ],
+  "objects": [
+    {
+      "id": 0,
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    {
+    }
+  ]
+}

@@ -10,7 +10,7 @@
 #include "libs/png.h"
 #include "SceneDescription.h"
 #include "SceneRenderer.h"
-#include "base_code/obj.h"
+#include "libs/obj.h"
 
 #define GLM_ENABLE_EXPERIMENTAL
 

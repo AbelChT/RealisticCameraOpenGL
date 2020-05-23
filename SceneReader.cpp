@@ -8,7 +8,14 @@
 #include <string>
 #include <map>
 #include <utility>
+
+#define GLM_ENABLE_EXPERIMENTAL
+
+#include <glm/glm.hpp>
+#include <glm/gtx/transform.hpp>
+
 #include "SceneReader.h"
+#include "libs/obj.h"
 
 class SceneReadingException : public std::exception {
 private:
@@ -25,9 +32,9 @@ public:
 using json = nlohmann::json;
 
 //SceneDescription readScene(std::string sceneName){
-void readScene(const std::string &sceneName) {
+void readScene(const std::string &scenePath) {
     // read a JSON file
-    std::ifstream inputJson(sceneName);
+    std::ifstream inputJson(scenePath);
     json jsonDeserialized;
     inputJson >> jsonDeserialized;
 
@@ -35,7 +42,7 @@ void readScene(const std::string &sceneName) {
         // Load textures
         auto textures = jsonDeserialized["textures"];
         // Store the textures
-        vector<PNG> textures_vector(textures.size());
+        std::vector<PNG> textures_vector(textures.size());
         // Texture position name association
         std::map<std::string, unsigned int> texture_position_name_association;
 
@@ -62,6 +69,47 @@ void readScene(const std::string &sceneName) {
             texture_position_name_association[textureName] = texturePositionInVector;
         }
 
+        // Load meshes
+        auto meshes = jsonDeserialized["meshes"];
+        // Store the meshes
+        std::vector<SceneMesh> meshes_vector(meshes.size());
+        // Mesh position name association
+        std::map<std::string, unsigned int> meshes_position_name_association;
+
+        for (auto &i: meshes) {
+            auto meshName = i["name"].get<std::string>();
+            auto meshPath = i["path"].get<std::string>();
+            auto rotateMesh = i["rotate"].get<bool>();
+            auto uniformMesh = i["uniform"].get<bool>();
+
+            // Check if mesh name is duplicated
+            if (meshes_position_name_association.contains(meshName))
+                throw SceneReadingException("Duplicated mesh name: " + meshName);
+
+            // Id of the mesh
+            unsigned int meshPositionInVector = meshes_position_name_association.size();
+
+            // Meshes definition
+            glm::mat4 xf = glm::rotate(glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+
+            OBJ obj;
+
+            if (rotateMesh)
+                obj.load(meshPath, xf, uniformMesh);
+            else
+                obj.load(meshPath, glm::mat4(1.0f), uniformMesh);
+
+            // Check if mesh have been correctly loaded
+            if (obj.faces().empty())
+                throw SceneReadingException("Error loading mesh: " + meshName);
+
+            meshes_vector[meshPositionInVector] = SceneMesh(obj.faces(), obj.normals(), obj.texcoord());
+
+            // Save mesh name id association
+            meshes_position_name_association[meshName] = meshPositionInVector;
+        }
+
+        int i = 0;
     }
     catch (json::exception &e) {
         // Bad input format

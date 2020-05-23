@@ -24,9 +24,13 @@ public:
     // Texture positions of the scene
     vector<glm::vec3> texture_positions;
 
-    // Constructor
-    SceneMesh(vector<glm::vec3> vertices, vector<glm::vec3> normals,
-              vector<glm::vec3> texturePositions);
+    // Constructors
+    SceneMesh() = default;
+
+    SceneMesh(vector<glm::vec3> vertices, vector<glm::vec3> normals, vector<glm::vec3> texturePositions);
+
+    // Default destructor
+    ~SceneMesh() = default;
 };
 
 
@@ -57,6 +61,9 @@ public:
     // Constructor
     SceneCamera(const glm::vec3 &position, const glm::vec3 &lookAt, float fieldOfView, float zNear, float zFar,
                 float rotationRadius);
+
+    // Default destructor
+    ~SceneCamera() = default;
 };
 
 // Parameters that define a camera in the real world
@@ -87,8 +94,12 @@ public:
     // Furthest distance the camera capture (meters)
     float zFar;
 
+    // Constructor
     CameraDefinition(const glm::vec3 &position, const glm::vec3 &lookAt, float sensorSize, float focalLength,
                      float fStop, float zFar);
+
+    // Default destructor
+    ~CameraDefinition() = default;
 };
 
 // Represent a light in the scene
@@ -99,6 +110,9 @@ public:
 
     // Constructor
     explicit SceneLight(const glm::vec3 &position);
+
+    // Default destructor
+    ~SceneLight() = default;
 };
 
 struct ObjectDescription {
@@ -132,6 +146,9 @@ public:
     ObjectDescription(const glm::vec3 &position, const glm::vec3 &rotation, const glm::vec3 &scale,
                       const glm::ivec3 &color, bool useColor, unsigned int textureIndex, bool useTexture,
                       unsigned int meshIndex);
+
+    // Default destructor
+    ~ObjectDescription() = default;
 };
 
 // Description of the scene
@@ -155,6 +172,9 @@ public:
     // Constructor
     SceneDescription(vector<SceneMesh> meshes, vector<PNG> textures, vector<ObjectDescription> objects,
                      const SceneLight &lights, const SceneCamera &camera);
+
+    // Default destructor
+    ~SceneDescription() = default;
 };
 
 /**

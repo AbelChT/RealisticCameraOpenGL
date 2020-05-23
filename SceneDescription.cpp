@@ -27,10 +27,6 @@ SceneMesh::SceneMesh(vector<glm::vec3> vertices, vector<glm::vec3> normals,
                      vector<glm::vec3> texturePositions)
         : vertices(std::move(vertices)), normals(std::move(normals)), texture_positions(std::move(texturePositions)) {}
 
-SceneCamera::SceneCamera()
-        : position(glm::vec3(0, 0, 0)), lookAt(glm::vec3(0, 0, 0)), fieldOfView(0), zNear(0),
-          zFar(0), rotationRadius(0) {}
-
 SceneCamera::SceneCamera(const glm::vec3 &position, const glm::vec3 &lookAt, float fieldOfView, float zNear, float zFar,
                          float rotationRadius)
         : position(position), lookAt(lookAt), fieldOfView(fieldOfView), zNear(zNear), zFar(zFar),

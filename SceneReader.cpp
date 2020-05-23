@@ -210,116 +210,40 @@ std::optional<SceneDescription> readScene(const std::string &scenePath) {
         auto sceneLight = SceneLight(lightPositionVector);
 
         // Load camera
+        auto camera = jsonDeserialized["camera"];
+        auto cameraPosition = camera["position"];
+        auto cameraPositionVector = glm::vec3(cameraPosition["x"].get<float>(),
+                                              cameraPosition["y"].get<float>(),
+                                              cameraPosition["z"].get<float>());
 
-        int breakpoint = 0 ;
+        auto cameraLookAt = camera["look_at"];
+        auto cameraLookAtVector = glm::vec3(cameraLookAt["x"].get<float>(),
+                                            cameraLookAt["y"].get<float>(),
+                                            cameraLookAt["z"].get<float>());
+
+        auto cameraSensorSize = camera["sensor_size"].get<float>();
+
+        auto cameraFocalLength = camera["focal_length"].get<float>();
+
+        auto cameraFStop = camera["f_stop"].get<float>();
+
+        auto cameraZFar = camera["z_far"].get<float>();
+
+        auto cameraDefinition = CameraDefinition(cameraPositionVector, cameraLookAtVector, cameraSensorSize,
+                                                 cameraFocalLength, cameraFStop, cameraZFar);
+
+        auto sceneCamera = cameraDefinitionToSceneCamera(cameraDefinition);
+
+        return SceneDescription(meshes_vector, textures_vector, materials_vector, objects_vector, sceneLight,
+                                sceneCamera);
     }
     catch (json::exception &e) {
         // Bad input format
         std::cerr << "Bad input format" << std::endl;
+        return {};
     } catch (SceneReadingException &e) {
         // Custom exception
         std::cerr << e.what() << std::endl;
+        return {};
     }
-
-    return {};
-
-//    // Meshes definition
-//    glm::mat4 xf = glm::rotate(glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-//
-//    OBJ obj;
-//    // obj.load("assets/teapot.obj", xf);
-//    obj.load("assets/can.obj", glm::mat4(1.0f), false);
-//
-//    std::cout << "Faces " << obj.faces().size() << std::endl;
-//
-//    vector<SceneMesh> sceneMeshes{
-//            SceneMesh(obj.faces(), obj.normals(), obj.texcoord())
-//    };
-//
-//    // Textures definition
-//    auto texture = PNG("tex/checker.png");
-////    vector<PNG> textures{
-////            PNG("tex/checker.png")
-////    };
-//
-//    // Light definition
-//    SceneLight sceneLight(glm::normalize(glm::vec3(1.0f)));
-//
-//    // Camera definition
-////    glm::vec3 to(0, 0, 0);
-////
-////    float world_ph = 0.0;
-////    float world_th = 30.0;
-////
-////    const float ph = glm::radians(world_ph);
-////    const float th = glm::radians(world_th);
-////
-////    glm::vec3 axis(cos(ph) * cos(th), sin(ph) * cos(th), sin(th));
-////    float cameraDistanceFromO = 4.0f;
-////    glm::vec3 eye = to + cameraDistanceFromO * axis;
-//
-//    glm::vec3 eye(1.0, 0, 0.4);
-//
-//    float cameraRotationX = 80.0f;
-//
-//    glm::vec3 to(eye.x - sin(glm::radians(cameraRotationX)), 0, eye.z - cos(glm::radians(cameraRotationX)));
-//
-//    // TODO: Solve error with field of view
-//    // SceneCamera sceneCamera(eye, to, 30.0f, 0.1f, 100.0f, 0.02);
-//
-//    CameraDefinition cameraDefinition(eye, to, 30, 32, 1,1000);
-//
-//    // Obtain camera from parameters
-//    SceneCamera sceneCamera = cameraDefinitionToSceneCamera(cameraDefinition);
-//    cout << "Field of view " << sceneCamera.fieldOfView << " rotation radius " << sceneCamera.rotationRadius << endl;
-//
-//    // Objects definition
-//    vector<ObjectDescription> sceneObjects{
-////            ObjectDescription(glm::vec3(0, 0, 0), glm::vec3(0, 0, 0),
-////                              glm::vec3(1, 1, 1), glm::vec3(255, 30, 30),
-////                              false, true, 0),
-////            ObjectDescription(glm::vec3(-8, 2, 0), glm::vec3(0, 0, 0),
-////                              glm::vec3(1, 1, 1), glm::vec3(30, 255, 30),
-////                              false, true, 0),
-////            ObjectDescription(glm::vec3(-32, -16, 0), glm::vec3(0, 0, 0),
-////                              glm::vec3(1, 1, 1), glm::vec3(30, 30, 255),
-////                              false, true, 0)
-//            ObjectDescription(glm::vec3(0, -0.1, 0), glm::vec3(0, 0, 0),
-//                              glm::vec3(1, 1, 1), glm::vec3(205, 63, 33),
-//                              false, true, 0),
-//            ObjectDescription(glm::vec3(0, 0.1, 0), glm::vec3(0, 0, 0),
-//                              glm::vec3(1, 1, 1), glm::vec3(30, 30, 255),
-//                              false, true, 0),
-//
-//            ObjectDescription(glm::vec3(-0.2, -0.1, 0), glm::vec3(0, 0, 0),
-//                              glm::vec3(1, 1, 1), glm::vec3(30, 30, 255),
-//                              false, true, 0),
-//            ObjectDescription(glm::vec3(-0.2, 0.1, 0), glm::vec3(0, 0, 0),
-//                              glm::vec3(1, 1, 1), glm::vec3(30, 30, 255),
-//                              false, true, 0),
-//
-//
-//            ObjectDescription(glm::vec3(-0.4, -0.1, 0), glm::vec3(0, 0, 0),
-//                              glm::vec3(1, 1, 1), glm::vec3(30, 30, 255),
-//                              false, true, 0),
-//            ObjectDescription(glm::vec3(-0.4, 0.1, 0), glm::vec3(0, 0, 0),
-//                              glm::vec3(1, 1, 1), glm::vec3(30, 30, 255),
-//                              false, true, 0),
-//
-//            ObjectDescription(glm::vec3(-0.6, -0.1, 0), glm::vec3(0, 0, 0),
-//                              glm::vec3(1, 1, 1), glm::vec3(30, 30, 255),
-//                              false, true, 0),
-//            ObjectDescription(glm::vec3(-0.6, 0.1, 0), glm::vec3(0, 0, 0),
-//                              glm::vec3(1, 1, 1), glm::vec3(30, 30, 255),
-//                              false, true, 0),
-//
-//            ObjectDescription(glm::vec3(-0.8, -0.1, 0), glm::vec3(0, 0, 0),
-//                              glm::vec3(1, 1, 1), glm::vec3(30, 30, 255),
-//                              false, true, 0),
-//            ObjectDescription(glm::vec3(-0.8, 0.1, 0), glm::vec3(0, 0, 0),
-//                              glm::vec3(1, 1, 1), glm::vec3(30, 30, 255),
-//                              false, true, 0)
-//    };
-//
-//    SceneDescription sceneDescription;
 }

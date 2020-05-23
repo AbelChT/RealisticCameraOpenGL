@@ -38,28 +38,27 @@ public:
 // Represent a camera in the scene
 struct SceneCamera {
 public:
-    // Position of the scene camera
-    glm::vec3 position;
+    // Position of the scene camera (meters)
+    glm::vec3 position = glm::vec3(0, 0, 0);
 
-    // Look at
-    glm::vec3 lookAt;
+    // Look at (meters)
+    glm::vec3 lookAt = glm::vec3(0, 0, 0);
 
-    // Field of view
-    float fieldOfView;
+    // Field of view (meters)
+    float fieldOfView = 0.0f;
 
-    // zNear
-    float zNear;
+    // zNear (meters)
+    float zNear = 0.0f;
 
-    // zFar
-    float zFar;
+    // zFar (meters)
+    float zFar = 0.0f;
 
-    // Rotation radius
-    float rotationRadius;
-
-    // Constructor
-    explicit SceneCamera();
+    // Rotation radius (meters)
+    float rotationRadius = 0.0f;
 
     // Constructor
+    SceneCamera() = default;
+
     SceneCamera(const glm::vec3 &position, const glm::vec3 &lookAt, float fieldOfView, float zNear, float zFar,
                 float rotationRadius);
 
@@ -71,22 +70,22 @@ public:
 struct CameraDefinition {
 public:
     // Position of the scene camera (meters)
-    glm::vec3 position;
+    glm::vec3 position = glm::vec3(0, 0, 0);
 
     // Look at position (meters)
-    glm::vec3 lookAt;
+    glm::vec3 lookAt = glm::vec3(0, 0, 0);
 
     // Horizontal large of the film (millimeters)
-    float sensorSize;
+    float sensorSize = 0.0f;
 
     // Distance between the lens and the film (millimeters)
-    float focalLength;
+    float focalLength = 0.0f;
 
     // f-stop (units)
-    float fStop;
+    float fStop = 0.0f;
 
     // Furthest distance the camera capture (meters)
-    float zFar;
+    float zFar = 0.0f;
 
     // Constructor
     CameraDefinition(const glm::vec3 &position, const glm::vec3 &lookAt, float sensorSize, float focalLength,
@@ -99,10 +98,12 @@ public:
 // Represent a light in the scene
 struct SceneLight {
 public:
-    // Position of the scene light
-    glm::vec3 position;
+    // Position of the scene light (meters)
+    glm::vec3 position = glm::vec3(0, 0, 0);
 
     // Constructor
+    SceneLight() = default;
+
     explicit SceneLight(const glm::vec3 &position);
 
     // Default destructor
@@ -112,8 +113,8 @@ public:
 // Represent a material in the scene
 struct SceneMaterial {
 public:
-    // Color of the material
-    glm::ivec3 color;
+    // Color of the material (8 bits RGB)
+    glm::ivec3 color = glm::ivec3(0, 0, 0);
 
     // Constructor
     SceneMaterial() = default;
@@ -128,26 +129,27 @@ public:
 struct ObjectDescription {
 public:
     // Transformation order translate-rotate-scale
-    // Position of the object
-    glm::vec3 position;
+    // Position of the object (meters)
+    glm::vec3 position = glm::vec3(0, 0, 0);
 
-    // Rotation of the object. Order rotation in x, rotation in y, rotation in z
-    glm::vec3 rotation;
+    // Rotation of the object (radians). Order rotation in x, rotation in y, rotation in z
+    glm::vec3 rotation = glm::vec3(0, 0, 0);
 
     // Scale of the object
-    glm::vec3 scale;
+    glm::vec3 scale = glm::vec3(0, 0, 0);
 
     // Texture index of the object
-    std::optional<unsigned int> textureIndex;
+    std::optional<unsigned int> textureIndex = {};
 
     // Material index of the object
-    std::optional<unsigned int> materialIndex;
+    std::optional<unsigned int> materialIndex = {};
 
     // Mesh index of the object
-    unsigned int meshIndex;
+    unsigned int meshIndex = 0;
 
     // Constructor
     ObjectDescription() = default;
+
     ObjectDescription(const glm::vec3 &position, const glm::vec3 &rotation, const glm::vec3 &scale,
                       std::optional<unsigned int> textureIndex, std::optional<unsigned int> materialIndex,
                       unsigned int meshIndex);

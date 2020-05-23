@@ -27,8 +27,8 @@ if (NOT json_POPULATED)
 endif ()
 
 # Configure project
-# add_executable(TestingOpenGL OpenglUtils.cpp OpenglUtils.h main.cpp SceneRenderer.h SceneDescription.h SceneRenderer.cpp libs/obj.h libs/obj.cc libs/png.h libs/png.cc SceneDescription.cpp SceneReader.cpp SceneReader.h main_tester.cpp)
-add_executable(TestingOpenGL SceneDescription.cpp SceneReader.cpp SceneReader.h main_tester.cpp libs/obj.h libs/obj.cc libs/png.h libs/png.cc)
+add_executable(TestingOpenGL OpenglUtils.cpp OpenglUtils.h main.cpp SceneRenderer.h SceneDescription.h SceneRenderer.cpp libs/obj.h libs/obj.cc libs/png.h libs/png.cc SceneDescription.cpp SceneReader.cpp SceneReader.h)
+# add_executable(TestingOpenGL SceneDescription.cpp SceneReader.cpp SceneReader.h main_tester.cpp libs/obj.h libs/obj.cc libs/png.h libs/png.cc)
 # add_executable(TestingOpenGL base_code/main.cc base_code/world.h base_code/world.cc base_code/obj.h base_code/obj.cc base_code/png.h base_code/png.cc)
 # add_executable(TestingOpenGL main_assimp_test.cpp SceneDescription.h)
 

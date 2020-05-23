@@ -19,13 +19,13 @@
 #include <iostream>
 
 // Vertex array object
-vector<GLuint> vertexArrayObjects;
+std::vector<GLuint> vertexArrayObjects;
 
 // Vertex array object size / Number of vertices
-vector<GLuint> vertexArrayObjectSizes;
+std::vector<GLuint> vertexArrayObjectSizes;
 
 // Texture used in the scene
-GLuint textureScene;
+std::vector<GLuint> texturesScene;
 
 // Gourd shader program id
 GLuint gourdProgramId;
@@ -37,7 +37,10 @@ glm::vec3 light;
 SceneCamera sceneCamera;
 
 // Scene objects
-vector<ObjectDescription> sceneObjects;
+std::vector<ObjectDescription> sceneObjects;
+
+// Scene materials
+std::vector<SceneMaterial> sceneMaterials;
 
 // Gourd shader path
 const char gourdVsPath[] = "shaders/myGourd.vert";
@@ -95,31 +98,48 @@ void initSceneRenderer(const SceneDescription &sceneDescription) {
         glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), nullptr);
     }
 
+    // Save textures
+    texturesScene.resize(sceneDescription.textures.size());
+
     // Generate and bind texture array
-    glGenTextures(1, &textureScene);
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, textureScene);
-    glTexStorage2D(GL_TEXTURE_2D,
-                   8,
-                   GL_RGB32F,
-                   sceneDescription.texture.width(), sceneDescription.texture.height());
-    glTexSubImage2D(GL_TEXTURE_2D,
-                    0, 0, 0,
-                    sceneDescription.texture.width(), sceneDescription.texture.height(),
-                    GL_RGB,
-                    GL_FLOAT,
-                    sceneDescription.texture.pixels().data());
-    glGenerateMipmap(GL_TEXTURE_2D);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glGenTextures(sceneDescription.textures.size(), texturesScene.data());
+
+    // Select one texture unit to work with
+    // glActiveTexture(GL_TEXTURE0);
+
+    for (int i = 0; i < sceneDescription.textures.size(); ++i) {
+        GLuint textureId = texturesScene[i];
+        const unsigned int numberOfMipmaps = 8;
+
+        // Allocate texture space
+        glBindTexture(GL_TEXTURE_2D, textureId);
+        glTexStorage2D(GL_TEXTURE_2D,
+                       numberOfMipmaps,
+                       GL_RGB32F,
+                       sceneDescription.textures[i].width(), sceneDescription.textures[i].height());
+        glTexSubImage2D(GL_TEXTURE_2D,
+                        0, 0, 0,
+                        sceneDescription.textures[i].width(), sceneDescription.textures[i].height(),
+                        GL_RGB,
+                        GL_FLOAT,
+                        sceneDescription.textures[i].pixels().data());
+
+        // Set texture parameters
+        glGenerateMipmap(GL_TEXTURE_2D);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    }
 
     // Save camera
     sceneCamera = sceneDescription.camera;
 
     // Save scene objects
     sceneObjects = sceneDescription.objects;
+
+    // Save scene materials
+    sceneMaterials = sceneDescription.materials;
 
     // Load shader
     gourdProgramId = createGLProgram(gourdVsPath, gourdFsPath);
@@ -241,6 +261,9 @@ void renderFrameIntoDefaultFrameBuffer(const int w, const int h, const glm::vec3
 
     glUniform3fv(eye_loc, 1, glm::value_ptr(eye));
 
+    // Work with only this texture unit
+    glActiveTexture(GL_TEXTURE0);
+
     // Transform from model space to world space
 
     // Transform from world space to view space
@@ -260,9 +283,23 @@ void renderFrameIntoDefaultFrameBuffer(const int w, const int h, const glm::vec3
         glEnableVertexAttribArray(1);
         glEnableVertexAttribArray(2);
 
-        // Object color and texture selection
-        glUniform1i(textureflg_loc, sceneObject.useTexture);
-        glUniform1i(colorflg_loc, sceneObject.useColor);
+        // Object texture selection
+        if (sceneObject.textureIndex.has_value()) {
+            glBindTexture(GL_TEXTURE_2D_ARRAY, texturesScene[sceneObject.textureIndex.value()]);
+            glUniform1i(textureflg_loc, true);
+        } else {
+            glUniform1i(textureflg_loc, false);
+        }
+
+        // Object color selection
+        if (sceneObject.materialIndex.has_value()) {
+            auto objectColor = sceneMaterials[sceneObject.materialIndex.value()].color;
+            glUniform1i(colorflg_loc, true);
+            glUniform3f(dcol_loc, objectColor.x / 255.0, objectColor.y / 255.0, objectColor.z / 255.0);
+        } else {
+            glUniform1i(colorflg_loc, false);
+            glUniform3f(dcol_loc, 0, 0, 0);
+        }
 
         // Object transformations
         auto transformationsOfObject = glm::identity<glm::mat4>();
@@ -276,34 +313,13 @@ void renderFrameIntoDefaultFrameBuffer(const int w, const int h, const glm::vec3
         transformationsOfObject = glm::scale(transformationsOfObject, sceneObject.scale);
 
         glUniformMatrix4fv(transformation_matrix_loc, 1, GL_FALSE, glm::value_ptr(transformationsOfObject));
-        glUniform3f(dcol_loc, sceneObject.color.x / 255.0, sceneObject.color.y / 255.0, sceneObject.color.z / 255.0);
+
         glDrawArrays(GL_TRIANGLES, 0, vertexArrayObjectSizes[sceneObject.meshIndex]);
 
         glDisableVertexAttribArray(0);
         glDisableVertexAttribArray(1);
         glDisableVertexAttribArray(2);
     }
-}
-
-void accumulateTexturesIntoDefaultFrameBuffer(GLuint accumulatorTexColorBuffer, unsigned int numberOfFrames) {
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    glUseProgram(transferProgramId);
-    glBindVertexArray(screenTextureVAO);
-    glEnableVertexAttribArray(0);
-    glEnableVertexAttribArray(1);
-
-    // Communicate the number of frames in the texture
-    GLuint numberOfFramesLoc = glGetUniformLocation(transferProgramId, "numberOfFrames");
-    glUniform1i(numberOfFramesLoc, numberOfFrames);
-
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D_ARRAY, accumulatorTexColorBuffer);
-
-    glDrawArrays(GL_TRIANGLES, 0, 6);
-
-    glDisableVertexAttribArray(0);
-    glDisableVertexAttribArray(1);
 }
 
 void accumulateWeightedTexturesIntoDefaultFrameBuffer(GLuint accumulatorTexColorBuffer, unsigned int numberOfNewFrames,
@@ -379,7 +395,7 @@ void renderFrameWithFieldOfViewAlgorithm1(int w, int h) {
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    accumulateTexturesIntoDefaultFrameBuffer(accumulatorTexColorBuffer, numberOfFrames);
+    accumulateWeightedTexturesIntoDefaultFrameBuffer(accumulatorTexColorBuffer, numberOfFrames, 0);
 
     glDeleteTextures(1, &accumulatorTexColorBuffer);
 }

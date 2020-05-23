@@ -8,6 +8,7 @@
 #include <string>
 #include <map>
 #include <utility>
+#include <optional>
 
 #define GLM_ENABLE_EXPERIMENTAL
 
@@ -113,7 +114,7 @@ std::optional<SceneDescription> readScene(const std::string &scenePath) {
         auto materials = jsonDeserialized["materials"];
 
         // Store the materials
-        std::vector<glm::ivec3> materials_vector(materials.size());
+        std::vector<SceneMaterial> materials_vector(materials.size());
 
         // Material position name association
         std::map<std::string, unsigned int> materials_position_name_association;
@@ -128,14 +129,89 @@ std::optional<SceneDescription> readScene(const std::string &scenePath) {
             // Id of the material
             unsigned int materialPositionInVector = materials_position_name_association.size();
 
+            // Scene material
+            auto sceneMaterial = SceneMaterial(colorVector);
+
             // Save material
-            materials_vector[materialPositionInVector] = colorVector;
+            materials_vector[materialPositionInVector] = sceneMaterial;
 
             // Save material name id association
             materials_position_name_association[materialName] = materialPositionInVector;
         }
 
-        int load_checker_breakpoint = 0;
+        // Load objects
+        auto objects = jsonDeserialized["objects"];
+
+        // Store the objects
+        std::vector<ObjectDescription> objects_vector(objects.size());
+
+        int objects_index = 0;
+        for (auto &i: objects) {
+            // Obtain index of the mesh
+            auto meshName = i["mesh_name"].get<std::string>();
+            if (!meshes_position_name_association.contains(meshName))
+                throw SceneReadingException("Error loading object, non existent mesh: " + meshName);
+
+            auto meshIndex = meshes_position_name_association[meshName];
+
+            // Obtain index of the texture
+            std::optional<unsigned int> textureIndex = {};
+
+            if (i.contains("texture_name")) {
+                auto textureName = i["texture_name"].get<std::string>();
+                if (!texture_position_name_association.contains(textureName))
+                    throw SceneReadingException("Error loading object, non existent texture: " + textureName);
+
+                textureIndex = texture_position_name_association[textureName];
+            }
+
+            // Obtain index of the material
+            std::optional<unsigned int> materialIndex = {};
+
+            if (i.contains("material_name")) {
+                auto materialName = i["material_name"].get<std::string>();
+                if (!materials_position_name_association.contains(materialName))
+                    throw SceneReadingException("Error loading object, non existent material: " + materialName);
+
+                materialIndex = materials_position_name_association[materialName];
+            }
+
+            // Obtain position
+            auto objectPosition = i["position"];
+            auto positionVector = glm::vec3(objectPosition["x"].get<float>(),
+                                            objectPosition["y"].get<float>(),
+                                            objectPosition["z"].get<float>());
+            // Obtain rotation
+            auto objectRotation = i["rotation"];
+            auto rotationVector = glm::vec3(objectRotation["x"].get<float>(),
+                                            objectRotation["y"].get<float>(),
+                                            objectRotation["z"].get<float>());
+
+            // Obtain scale
+            auto objectScale = i["scale"];
+            auto scaleVector = glm::vec3(objectScale["x"].get<float>(),
+                                         objectScale["y"].get<float>(),
+                                         objectScale["z"].get<float>());
+
+
+            // Create object description
+            objects_vector[objects_index] = ObjectDescription(positionVector, rotationVector, scaleVector, textureIndex,
+                                                              materialIndex, meshIndex);
+            ++objects_index;
+        }
+
+        // Load light
+        auto light = jsonDeserialized["light"];
+        auto lightPosition = light["position"];
+        auto lightPositionVector = glm::vec3(lightPosition["x"].get<float>(),
+                                             lightPosition["y"].get<float>(),
+                                             lightPosition["z"].get<float>());
+
+        auto sceneLight = SceneLight(lightPositionVector);
+
+        // Load camera
+
+        int breakpoint = 0 ;
     }
     catch (json::exception &e) {
         // Bad input format

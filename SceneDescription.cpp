@@ -24,11 +24,12 @@ SceneCamera cameraDefinitionToSceneCamera(CameraDefinition cameraDefinition) {
 }
 
 SceneMesh::SceneMesh(vector<glm::vec3> vertices, vector<glm::vec3> normals,
-                     vector<glm::vec3> texturePositions) : vertices(std::move(vertices)), normals(std::move(normals)),
-                                                           texture_positions(std::move(texturePositions)) {}
+                     vector<glm::vec3> texturePositions)
+        : vertices(std::move(vertices)), normals(std::move(normals)), texture_positions(std::move(texturePositions)) {}
 
-SceneCamera::SceneCamera() : position(glm::vec3(0, 0, 0)), lookAt(glm::vec3(0, 0, 0)), fieldOfView(0), zNear(0),
-                             zFar(0), rotationRadius(0) {}
+SceneCamera::SceneCamera()
+        : position(glm::vec3(0, 0, 0)), lookAt(glm::vec3(0, 0, 0)), fieldOfView(0), zNear(0),
+          zFar(0), rotationRadius(0) {}
 
 SceneCamera::SceneCamera(const glm::vec3 &position, const glm::vec3 &lookAt, float fieldOfView, float zNear, float zFar,
                          float rotationRadius)
@@ -36,22 +37,24 @@ SceneCamera::SceneCamera(const glm::vec3 &position, const glm::vec3 &lookAt, flo
           rotationRadius(rotationRadius) {}
 
 CameraDefinition::CameraDefinition(const glm::vec3 &position, const glm::vec3 &lookAt, float sensorSize,
-                                   float focalLength, float fStop, float zFar) : position(position), lookAt(lookAt),
-                                                                                 sensorSize(sensorSize),
-                                                                                 focalLength(focalLength), fStop(fStop),
-                                                                                 zFar(zFar) {}
+                                   float focalLength, float fStop, float zFar)
+        : position(position), lookAt(lookAt), sensorSize(sensorSize), focalLength(focalLength), fStop(fStop),
+          zFar(zFar) {}
 
-SceneLight::SceneLight(const glm::vec3 &position) : position(position) {}
+SceneLight::SceneLight(const glm::vec3 &position)
+        : position(position) {}
 
-SceneMaterial::SceneMaterial(const glm::ivec3 &color) : color(color) {}
+SceneMaterial::SceneMaterial(const glm::ivec3 &color)
+        : color(color) {}
 
 ObjectDescription::ObjectDescription(const glm::vec3 &position, const glm::vec3 &rotation, const glm::vec3 &scale,
-                                     std::optional<unsigned int> textureIndex, std::optional<unsigned int> meshIndex)
-        : position(position), rotation(rotation), scale(scale), meshIndex(meshIndex) {}
+                                     std::optional<unsigned int> textureIndex,
+                                     std::optional<unsigned int> materialIndex, unsigned int meshIndex)
+        : position(position), rotation(rotation), scale(scale), textureIndex(textureIndex),
+          materialIndex(materialIndex), meshIndex(meshIndex) {}
 
-SceneDescription::SceneDescription(vector<SceneMesh> meshes, vector<PNG> textures, vector<ObjectDescription> objects,
-                                   const SceneLight &light, const SceneCamera &camera) : meshes(std::move(meshes)),
-                                                                                         textures(std::move(textures)),
-                                                                                         objects(std::move(objects)),
-                                                                                         light(light),
-                                                                                         camera(camera) {}
+SceneDescription::SceneDescription(vector<SceneMesh> meshes, vector<PNG> textures, vector<SceneMaterial> materials,
+                                   vector<ObjectDescription> objects, const SceneLight &light,
+                                   const SceneCamera &camera)
+        : meshes(std::move(meshes)), textures(std::move(textures)), materials(std::move(materials)),
+          objects(std::move(objects)), light(light), camera(camera) {}

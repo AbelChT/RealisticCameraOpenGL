@@ -116,6 +116,8 @@ public:
     glm::ivec3 color;
 
     // Constructor
+    SceneMaterial() = default;
+
     explicit SceneMaterial(const glm::ivec3 &color);
 
     // Default destructor
@@ -138,12 +140,17 @@ public:
     // Texture index of the object
     std::optional<unsigned int> textureIndex;
 
+    // Material index of the object
+    std::optional<unsigned int> materialIndex;
+
     // Mesh index of the object
-    std::optional<unsigned int> meshIndex;
+    unsigned int meshIndex;
 
     // Constructor
+    ObjectDescription() = default;
     ObjectDescription(const glm::vec3 &position, const glm::vec3 &rotation, const glm::vec3 &scale,
-                      std::optional<unsigned int> textureIndex, std::optional<unsigned int> meshIndex);
+                      std::optional<unsigned int> textureIndex, std::optional<unsigned int> materialIndex,
+                      unsigned int meshIndex);
 
     // Default destructor
     ~ObjectDescription() = default;
@@ -158,6 +165,9 @@ public:
     // Textures in the scene
     vector<PNG> textures;
 
+    // Materials in the scene
+    vector<SceneMaterial> materials;
+
     // Objects in the scene
     vector<ObjectDescription> objects;
 
@@ -168,7 +178,8 @@ public:
     SceneCamera camera;
 
     // Constructor
-    SceneDescription(vector<SceneMesh> meshes, vector<PNG> textures, vector<ObjectDescription> objects,
+    SceneDescription(vector<SceneMesh> meshes, vector<PNG> textures, vector<SceneMaterial> materials,
+                     vector<ObjectDescription> objects,
                      const SceneLight &lights, const SceneCamera &camera);
 
     // Default destructor

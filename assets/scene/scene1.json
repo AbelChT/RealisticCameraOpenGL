@@ -36,6 +36,11 @@
         "y": 0,
         "z": 0
       },
+      "scale": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
       "texture_name": "checker",
       "material_name": "mate_blue"
     }

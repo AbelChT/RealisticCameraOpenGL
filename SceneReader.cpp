@@ -7,32 +7,68 @@
 #include <iostream>
 #include <string>
 #include <map>
+#include <utility>
 #include "SceneReader.h"
+
+class SceneReadingException : public std::exception {
+private:
+    std::string s;
+
+public:
+    explicit SceneReadingException(std::string ss) : s(std::move(ss)) {}
+
+    ~SceneReadingException() noexcept override = default;
+
+    [[nodiscard]] const char *what() const noexcept override { return s.c_str(); }
+};
 
 using json = nlohmann::json;
 
 //SceneDescription readScene(std::string sceneName){
-void readScene(std::string sceneName) {
+void readScene(const std::string &sceneName) {
     // read a JSON file
     std::ifstream inputJson(sceneName);
     json jsonDeserialized;
     inputJson >> jsonDeserialized;
 
     try {
-        std::map<std::string, int> m;
-
         // Load textures
         auto textures = jsonDeserialized["textures"];
+        // Store the textures
+        vector<PNG> textures_vector(textures.size());
+        // Texture position name association
+        std::map<std::string, unsigned int> texture_position_name_association;
+
         for (auto &i: textures) {
             auto textureName = i["name"].get<std::string>();
             auto texturePath = i["path"].get<std::string>();
-            // TODO: Save values in the has
+
+            // Check if texture name is duplicated
+            if (texture_position_name_association.contains(textureName))
+                throw SceneReadingException("Duplicated texture name: " + textureName);
+
+            // Id of the texture
+            unsigned int texturePositionInVector = texture_position_name_association.size();
+
+            // Save texture
+            textures_vector[texturePositionInVector] = PNG(texturePath);
+
+            // Check if texture have been correctly loaded
+            if (textures_vector[texturePositionInVector].width() == 0 ||
+                textures_vector[texturePositionInVector].height() == 0)
+                throw SceneReadingException("Error loading texture: " + textureName);
+
+            // Save texture name id association
+            texture_position_name_association[textureName] = texturePositionInVector;
         }
+
     }
     catch (json::exception &e) {
-        // output exception information
-        std::cout << "message: " << e.what() << '\n'
-                  << "exception id: " << e.id << std::endl;
+        // Bad input format
+        std::cerr << "Bad input format" << std::endl;
+    } catch (SceneReadingException &e) {
+        // Custom exception
+        std::cerr << e.what() << std::endl;
     }
 
 

@@ -9,6 +9,7 @@
 
 #include <vector>
 #include <glm/vec3.hpp>
+#include <optional>
 
 using namespace std;
 
@@ -75,13 +76,6 @@ public:
     // Look at position (meters)
     glm::vec3 lookAt;
 
-    // TODO: Delete lookAt and add this two parameters. With them we can obtain lookAt and up
-//    // Rotation of the camera (degrees)
-//    glm::vec3 cameraRotation;
-//
-//    // Distance of the object on focus (meters)
-//    float focusDistance;
-
     // Horizontal large of the film (millimeters)
     float sensorSize;
 
@@ -115,6 +109,20 @@ public:
     ~SceneLight() = default;
 };
 
+// Represent a material in the scene
+struct SceneMaterial {
+public:
+    // Color of the material
+    glm::ivec3 color;
+
+    // Constructor
+    explicit SceneMaterial(const glm::ivec3 &color);
+
+    // Default destructor
+    ~SceneMaterial() = default;
+};
+
+// Represent a object in the scene
 struct ObjectDescription {
 public:
     // Transformation order translate-rotate-scale
@@ -127,25 +135,15 @@ public:
     // Scale of the object
     glm::vec3 scale;
 
-    // Color of the object
-    glm::vec3 color;
-
-    // Use color
-    bool useColor;
-
     // Texture index of the object
-    unsigned int textureIndex;
-
-    // Use texture
-    bool useTexture;
+    std::optional<unsigned int> textureIndex;
 
     // Mesh index of the object
-    unsigned int meshIndex;
+    std::optional<unsigned int> meshIndex;
 
     // Constructor
     ObjectDescription(const glm::vec3 &position, const glm::vec3 &rotation, const glm::vec3 &scale,
-                      const glm::ivec3 &color, bool useColor, unsigned int textureIndex, bool useTexture,
-                      unsigned int meshIndex);
+                      std::optional<unsigned int> textureIndex, std::optional<unsigned int> meshIndex);
 
     // Default destructor
     ~ObjectDescription() = default;

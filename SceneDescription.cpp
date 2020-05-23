@@ -43,12 +43,11 @@ CameraDefinition::CameraDefinition(const glm::vec3 &position, const glm::vec3 &l
 
 SceneLight::SceneLight(const glm::vec3 &position) : position(position) {}
 
+SceneMaterial::SceneMaterial(const glm::ivec3 &color) : color(color) {}
+
 ObjectDescription::ObjectDescription(const glm::vec3 &position, const glm::vec3 &rotation, const glm::vec3 &scale,
-                                     const glm::ivec3 &color, bool useColor, unsigned int textureIndex, bool useTexture,
-                                     unsigned int meshIndex) : position(position), rotation(rotation), scale(scale),
-                                                               color(color),
-                                                               useColor(useColor), useTexture(useTexture),
-                                                               meshIndex(meshIndex) {}
+                                     std::optional<unsigned int> textureIndex, std::optional<unsigned int> meshIndex)
+        : position(position), rotation(rotation), scale(scale), meshIndex(meshIndex) {}
 
 SceneDescription::SceneDescription(vector<SceneMesh> meshes, vector<PNG> textures, vector<ObjectDescription> objects,
                                    const SceneLight &light, const SceneCamera &camera) : meshes(std::move(meshes)),

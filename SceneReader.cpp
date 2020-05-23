@@ -32,7 +32,7 @@ public:
 using json = nlohmann::json;
 
 //SceneDescription readScene(std::string sceneName){
-void readScene(const std::string &scenePath) {
+std::optional<SceneDescription> readScene(const std::string &scenePath) {
     // read a JSON file
     std::ifstream inputJson(scenePath);
     json jsonDeserialized;
@@ -109,7 +109,33 @@ void readScene(const std::string &scenePath) {
             meshes_position_name_association[meshName] = meshPositionInVector;
         }
 
-        int i = 0;
+        // Load materials
+        auto materials = jsonDeserialized["materials"];
+
+        // Store the materials
+        std::vector<glm::ivec3> materials_vector(materials.size());
+
+        // Material position name association
+        std::map<std::string, unsigned int> materials_position_name_association;
+
+        for (auto &i: materials) {
+            auto materialName = i["name"].get<std::string>();
+            auto materialColor = i["color"];
+            auto colorVector = glm::ivec3(materialColor["r"].get<int>(),
+                                          materialColor["g"].get<int>(),
+                                          materialColor["b"].get<int>());
+
+            // Id of the material
+            unsigned int materialPositionInVector = materials_position_name_association.size();
+
+            // Save material
+            materials_vector[materialPositionInVector] = colorVector;
+
+            // Save material name id association
+            materials_position_name_association[materialName] = materialPositionInVector;
+        }
+
+        int load_checker_breakpoint = 0;
     }
     catch (json::exception &e) {
         // Bad input format
@@ -119,6 +145,7 @@ void readScene(const std::string &scenePath) {
         std::cerr << e.what() << std::endl;
     }
 
+    return {};
 
 //    // Meshes definition
 //    glm::mat4 xf = glm::rotate(glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));

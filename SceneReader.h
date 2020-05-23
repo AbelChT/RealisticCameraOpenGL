@@ -4,9 +4,11 @@
 
 #ifndef TESTINGOPENGL_SCENEREADER_H
 #define TESTINGOPENGL_SCENEREADER_H
+
 #include "SceneDescription.h"
 #include <string>
+#include <optional>
 
-void readScene(const std::string& sceneName);
+std::optional<SceneDescription> readScene(const std::string &sceneName);
 
 #endif //TESTINGOPENGL_SCENEREADER_H

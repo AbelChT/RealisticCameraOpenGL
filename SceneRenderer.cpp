@@ -7,8 +7,6 @@
 #include "libs/png.h"
 
 #include <GL/glew.h>
-#include <GL/gl.h>
-#include <GL/glu.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -62,6 +60,10 @@ const char accumulateWeightedFsPath[] = "shaders/sumWeightedTextures.frag";
 // screen texture VAO
 GLuint screenTextureVAO;
 
+/**
+ * Init the render
+ * @param sceneDescription
+ */
 void initSceneRenderer(const SceneDescription &sceneDescription) {
     // Generate and bind vertex array
     vertexArrayObjects.resize(sceneDescription.meshes.size());
@@ -105,7 +107,7 @@ void initSceneRenderer(const SceneDescription &sceneDescription) {
     glGenTextures(sceneDescription.textures.size(), texturesScene.data());
 
     // Select one texture unit to work with
-    // glActiveTexture(GL_TEXTURE0);
+    glActiveTexture(GL_TEXTURE0);
 
     for (int i = 0; i < sceneDescription.textures.size(); ++i) {
         GLuint textureId = texturesScene[i];
@@ -130,6 +132,9 @@ void initSceneRenderer(const SceneDescription &sceneDescription) {
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+
+        // Unbind texture
+        glBindTexture(GL_TEXTURE_2D, 0);
     }
 
     // Save camera
@@ -213,6 +218,11 @@ void initSceneRenderer(const SceneDescription &sceneDescription) {
     }
 }
 
+/**
+ * Callback for scene reshape
+ * @param w
+ * @param h
+ */
 void reshapeScene(int w, int h) {
     glViewport(0, 0, w, h);
     std::cout << w << " " << h << std::endl;
@@ -251,6 +261,7 @@ void renderFrameIntoDefaultFrameBuffer(const int w, const int h, const glm::vec3
     GLuint ns_loc = glGetUniformLocation(gourdProgramId, "ns");
     GLuint textureflg_loc = glGetUniformLocation(gourdProgramId, "textureflg");
     GLuint colorflg_loc = glGetUniformLocation(gourdProgramId, "colorflg");
+    GLuint tex_loc = glGetUniformLocation(gourdProgramId, "tex");
 
     glUniform3fv(light_loc, 1, glm::value_ptr(light));
     glUniform1f(kd_loc, 0.5f);
@@ -263,6 +274,9 @@ void renderFrameIntoDefaultFrameBuffer(const int w, const int h, const glm::vec3
 
     // Work with only this texture unit
     glActiveTexture(GL_TEXTURE0);
+
+    // Set texture location
+    glUniform1i(tex_loc, 0);
 
     // Transform from model space to world space
 
@@ -285,7 +299,7 @@ void renderFrameIntoDefaultFrameBuffer(const int w, const int h, const glm::vec3
 
         // Object texture selection
         if (sceneObject.textureIndex.has_value()) {
-            glBindTexture(GL_TEXTURE_2D_ARRAY, texturesScene[sceneObject.textureIndex.value()]);
+            glBindTexture(GL_TEXTURE_2D, texturesScene[sceneObject.textureIndex.value()]);
             glUniform1i(textureflg_loc, true);
         } else {
             glUniform1i(textureflg_loc, false);
@@ -316,12 +330,28 @@ void renderFrameIntoDefaultFrameBuffer(const int w, const int h, const glm::vec3
 
         glDrawArrays(GL_TRIANGLES, 0, vertexArrayObjectSizes[sceneObject.meshIndex]);
 
+        // Unbind texture
+        if (sceneObject.textureIndex.has_value()) {
+            glBindTexture(GL_TEXTURE_2D, 0);
+        }
+
         glDisableVertexAttribArray(0);
         glDisableVertexAttribArray(1);
         glDisableVertexAttribArray(2);
     }
 }
 
+/**
+ * Sum different textures into the default frame buffer
+ *
+ * Operation done:
+ * default frame buffer = (accumulatorTexColorBuffer[0] * numberOfAccumulatedFrames +
+ * sum(accumulatorTexColorBuffer[1..numberOfNewFrames])) / (numberOfAccumulatedFrames + numberOfNewFrames)
+ *
+ * @param accumulatorTexColorBuffer buffer where the textures to sum are located
+ * @param numberOfNewFrames new frames
+ * @param numberOfAccumulatedFrames accumulated frames
+ */
 void accumulateWeightedTexturesIntoDefaultFrameBuffer(GLuint accumulatorTexColorBuffer, unsigned int numberOfNewFrames,
                                                       unsigned int numberOfAccumulatedFrames) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -343,61 +373,11 @@ void accumulateWeightedTexturesIntoDefaultFrameBuffer(GLuint accumulatorTexColor
 
     glDrawArrays(GL_TRIANGLES, 0, 6);
 
-    glDisableVertexAttribArray(0);
-    glDisableVertexAttribArray(1);
-}
-
-void renderFrameWithFieldOfViewAlgorithm1(int w, int h) {
-    const int numberOfFrames = 16;
-    GLuint accumulatorTexColorBuffer;
-    glGenTextures(1, &accumulatorTexColorBuffer);
-    glActiveTexture(GL_TEXTURE0);
-
-    // Generate texture for the accumulator buffer
-    glBindTexture(GL_TEXTURE_2D_ARRAY, accumulatorTexColorBuffer);
-    glTexStorage3D(GL_TEXTURE_2D_ARRAY, 1, GL_RGB8, w, h, numberOfFrames);
-    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-
     // Unbind texture
     glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
 
-    float defaultDistanceFromO = glm::distance(sceneCamera.position, sceneCamera.lookAt);
-    float defaultFieldOfView = sceneCamera.fieldOfView;
-
-    float stepSize = 0.01f;
-    // float stepSize = 0.0004f;
-
-    float firstStepDistanceFromO = defaultDistanceFromO - ((float) numberOfFrames / 2.0) * stepSize;
-
-    glm::vec3 to = sceneCamera.lookAt;
-
-    glm::vec3 axis = glm::normalize(sceneCamera.position - sceneCamera.lookAt);
-
-    float zNear = sceneCamera.zNear;
-
-    float zFar = sceneCamera.zFar;
-
-    for (int i = 0; i < numberOfFrames; i++) {
-        float distanceFromO = firstStepDistanceFromO + ((float) i) * stepSize;
-        double tan_b = ((defaultDistanceFromO) * tan((defaultFieldOfView * M_PI) / 180.0)) / distanceFromO;
-        float fieldOfView = (float) ((atan(tan_b) * 180.0) / M_PI);
-
-        glm::vec3 eye = to + distanceFromO * axis;
-
-        renderFrameIntoDefaultFrameBuffer(w, h, eye, to, fieldOfView, zNear, zFar);
-
-        glBindTexture(GL_TEXTURE_2D_ARRAY, accumulatorTexColorBuffer);
-        glCopyTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, i, 0, 0, w, h);
-    }
-
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    accumulateWeightedTexturesIntoDefaultFrameBuffer(accumulatorTexColorBuffer, numberOfFrames, 0);
-
-    glDeleteTextures(1, &accumulatorTexColorBuffer);
+    glDisableVertexAttribArray(0);
+    glDisableVertexAttribArray(1);
 }
 
 /**
@@ -410,13 +390,12 @@ void renderFrameWithFieldOfViewAlgorithm1(int w, int h) {
  * @param numberOfAccumulatedTextures maximum number of textures that can be accumulated
  */
 void renderFramesAndAccumulateMovingCamera(const int w, const int h, const vector<glm::vec3> &camera_positions,
-                                           const int numberOfAccumulatedTextures) {
+                                           const int numberOfAccumulatedTextures,
+                                           const std::optional<std::vector<float>> &dynamicFieldOfView = {}) {
     // Total number of images to take
     const int numberOfFrames = camera_positions.size();
 
-    // Camera parameters
-    float fieldOfView = sceneCamera.fieldOfView;
-
+    // Static camera parameters
     glm::vec3 to = sceneCamera.lookAt;
 
     float zNear = sceneCamera.zNear;
@@ -442,6 +421,8 @@ void renderFramesAndAccumulateMovingCamera(const int w, const int h, const vecto
     glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
 
     for (int i = 0; i < numberOfFrames; i++) {
+        float fieldOfView = dynamicFieldOfView.has_value() ? dynamicFieldOfView.value()[i] : sceneCamera.fieldOfView;
+
         glm::vec3 renderEye = camera_positions[i];
         renderFrameIntoDefaultFrameBuffer(w, h, renderEye, to, fieldOfView, zNear, zFar);
 
@@ -463,6 +444,7 @@ void renderFramesAndAccumulateMovingCamera(const int w, const int h, const vecto
                 // In the last frame it is no need to copy the texture (it is displayed)
                 glBindTexture(GL_TEXTURE_2D_ARRAY, accumulatorTexColorBuffer);
                 glCopyTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, 0, 0, 0, w, h);
+                glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
             }
         }
     }
@@ -480,7 +462,51 @@ void renderFramesAndAccumulateMovingCamera(const int w, const int h, const vecto
 }
 
 /**
- * Create field of view integrating over the perimeter of the circle
+ * Create field of view integrating over the axis where the camera is looking at
+ * @param w width
+ * @param h height
+ */
+void renderFrameWithFieldOfViewIntegratingOverCameraAxis(int w, int h) {
+    // Total number of images to take
+    const int numberOfFrames = 84;
+
+    glm::vec3 to = sceneCamera.lookAt;
+
+    glm::vec3 eye = sceneCamera.position;
+
+    glm::vec3 axis = glm::normalize(sceneCamera.lookAt - sceneCamera.position);
+
+    // Size of step
+    float stepSize = (sceneCamera.rotationRadius / (float) (numberOfFrames)) * 5;
+
+    // Position of the camera
+    vector<glm::vec3> camera_position(numberOfFrames);
+
+    // Field of view
+    vector<float> field_of_view(numberOfFrames);
+
+    // Default distance from object
+    float defaultDistanceFromObject = glm::distance(eye, to);
+
+    for (int i = 0; i < numberOfFrames; i++) {
+        glm::vec3 localEye = eye + (((float) i) * stepSize) * axis;
+        float distanceFromObject = glm::distance(localEye, to);
+        double tan_b =
+                ((defaultDistanceFromObject) * tan((sceneCamera.fieldOfView * M_PI) / 180.0)) / distanceFromObject;
+        auto localFieldOfView = (float) ((atan(tan_b) * 180.0) / M_PI);
+        camera_position[i] = localEye;
+        field_of_view[i] = localFieldOfView;
+    }
+
+    // Total number of textures used
+    const int numberOfAccumulatedTextures = 6;
+
+    // Do accumulation
+    renderFramesAndAccumulateMovingCamera(w, h, camera_position, numberOfAccumulatedTextures, field_of_view);
+}
+
+/**
+ * Create field of view integrating over the perimeter of the diaphragm
  * @param w width
  * @param h height
  */
@@ -520,7 +546,7 @@ void renderFrameWithFieldOfViewIntegratingOverPerimeter(int w, int h) {
 }
 
 /**
- * Create field of view integrating over the circle area
+ * Create field of view integrating over the diaphragm area
  * @param w width
  * @param h height
  */

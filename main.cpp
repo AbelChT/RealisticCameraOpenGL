@@ -12,7 +12,7 @@
 
 void initEngine() {
     // Load scene
-    auto returned_data = readScene("assets/scene/plane_render.json");
+    auto returned_data = readScene("assets/scene/scene1_with_plane.json");
 
     // Init engine
     initSceneRenderer(returned_data.value());

@@ -9,8 +9,8 @@
   "meshes": [
     {
       "name": "plane",
-      "path": "assets/meshes/plane2.obj",
-      "rotate": false,
+      "path": "assets/meshes/plane.obj",
+      "rotate": true,
       "uniform": false
     },
     {
@@ -41,9 +41,9 @@
   "objects": [
     {
       "position": {
-        "x": -10,
-        "y": -2,
-        "z": -2
+        "x": 0,
+        "y": 0,
+        "z": 0
       },
       "rotation": {
         "x": 0,

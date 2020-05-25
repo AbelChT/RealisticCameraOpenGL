@@ -1,0 +1,275 @@
+{
+  "name": "Can scene",
+  "textures": [
+    {
+      "name": "checker",
+      "path": "assets/textures/checker.png"
+    }
+  ],
+  "meshes": [
+    {
+      "name": "plane",
+      "path": "assets/meshes/plane.obj",
+      "rotate": false,
+      "uniform": false
+    },
+    {
+      "name": "can",
+      "path": "assets/meshes/can.obj",
+      "rotate": false,
+      "uniform": false
+    }
+  ],
+  "materials": [
+    {
+      "name": "mate_blue",
+      "color": {
+        "r": 30,
+        "g": 30,
+        "b": 255
+      }
+    },
+    {
+      "name": "mate_red",
+      "color": {
+        "r": 255,
+        "g": 30,
+        "b": 30
+      }
+    }
+  ],
+  "objects": [
+    {
+      "position": {
+        "x": 0,
+        "y": -0.1,
+        "z": 0
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "mesh_name": "can",
+      "material_name": "mate_blue"
+    },
+    {
+      "position": {
+        "x": 0,
+        "y": 0.1,
+        "z": 0
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "mesh_name": "can",
+      "material_name": "mate_red"
+    },
+    {
+      "position": {
+        "x": -0.2,
+        "y": 0.1,
+        "z": 0
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "mesh_name": "can",
+      "texture_name": "checker"
+    },
+    {
+      "position": {
+        "x": -0.2,
+        "y": -0.1,
+        "z": 0
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "mesh_name": "can",
+      "texture_name": "checker"
+    },
+    {
+      "position": {
+        "x": -0.4,
+        "y": 0.1,
+        "z": 0
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "mesh_name": "can",
+      "texture_name": "checker"
+    },
+    {
+      "position": {
+        "x": -0.4,
+        "y": -0.1,
+        "z": 0
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "mesh_name": "can",
+      "texture_name": "checker"
+    },
+    {
+      "position": {
+        "x": -0.6,
+        "y": 0.1,
+        "z": 0
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "mesh_name": "can",
+      "texture_name": "checker"
+    },
+    {
+      "position": {
+        "x": -0.6,
+        "y": -0.1,
+        "z": 0
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "mesh_name": "can",
+      "texture_name": "checker"
+    },
+    {
+      "position": {
+        "x": -0.8,
+        "y": 0.1,
+        "z": 0
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "mesh_name": "can",
+      "texture_name": "checker"
+    },
+    {
+      "position": {
+        "x": -0.8,
+        "y": -0.1,
+        "z": 0
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "mesh_name": "can",
+      "texture_name": "checker"
+    },
+    {
+      "position": {
+        "x": -7,
+        "y": -1,
+        "z": -1
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "mesh_name": "plane",
+      "texture_name": "checker"
+    }
+  ],
+  "light": {
+    "position": {
+      "x": 15,
+      "y": 18,
+      "z": 19
+    }
+  },
+  "camera": {
+    "position": {
+      "x": 1.0,
+      "y": 0,
+      "z": 0.4
+    },
+    "look_at": {
+      "x": 0.0151922703,
+      "y": 0,
+      "z": 0.226351783
+    },
+    "sensor_size": 30.0,
+    "focal_length": 32.0,
+    "f_stop": 1.0,
+    "z_far": 1000
+  }
+}

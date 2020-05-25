@@ -80,7 +80,7 @@ void initSceneRenderer(const SceneDescription &sceneDescription) {
         glGenBuffers(1, &vertexLocationBufferObject);
         glBindBuffer(GL_ARRAY_BUFFER, vertexLocationBufferObject);
         glBufferData(GL_ARRAY_BUFFER, vertexArrayObjectSizes[i] * sizeof(glm::vec3),
-                     sceneDescription.meshes.begin()->vertices.data(), GL_STATIC_DRAW);
+                     sceneDescription.meshes[i].vertices.data(), GL_STATIC_DRAW);
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), nullptr);
 
         // Associate normals to the VAO
@@ -88,7 +88,7 @@ void initSceneRenderer(const SceneDescription &sceneDescription) {
         glGenBuffers(1, &vertexNormalsBufferObject);
         glBindBuffer(GL_ARRAY_BUFFER, vertexNormalsBufferObject);
         glBufferData(GL_ARRAY_BUFFER, vertexArrayObjectSizes[i] * sizeof(glm::vec3),
-                     sceneDescription.meshes.begin()->normals.data(), GL_STATIC_DRAW);
+                     sceneDescription.meshes[i].normals.data(), GL_STATIC_DRAW);
         glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), nullptr);
 
         // Associate texture locations to the VAO
@@ -96,7 +96,7 @@ void initSceneRenderer(const SceneDescription &sceneDescription) {
         glGenBuffers(1, &vertexTextureBufferObject);
         glBindBuffer(GL_ARRAY_BUFFER, vertexTextureBufferObject);
         glBufferData(GL_ARRAY_BUFFER, vertexArrayObjectSizes[i] * sizeof(glm::vec3),
-                     sceneDescription.meshes.begin()->texture_positions.data(), GL_STATIC_DRAW);
+                     sceneDescription.meshes[i].texture_positions.data(), GL_STATIC_DRAW);
         glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), nullptr);
     }
 
@@ -338,6 +338,7 @@ void renderFrameIntoDefaultFrameBuffer(const int w, const int h, const glm::vec3
         glDisableVertexAttribArray(0);
         glDisableVertexAttribArray(1);
         glDisableVertexAttribArray(2);
+        glBindVertexArray(0);
     }
 }
 

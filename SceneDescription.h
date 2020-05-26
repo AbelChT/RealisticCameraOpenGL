@@ -108,7 +108,7 @@ public:
     // Intensity in each of the components of the ambient scene light (range [0,1])
     // TODO: Include this value in the constructor
     // TODO: This variable must be keep outside this structure if more than one light be used
-    glm::vec3 ambientColor = glm::vec3(0, 0, 0);
+    glm::vec3 ambientColor = glm::vec3(0.1, 0.1, 0.1);
 
     // Constructor
     SceneLight() = default;

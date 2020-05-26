@@ -26,9 +26,6 @@ std::vector<GLuint> vertexArrayObjectSizes;
 // Texture used in the scene
 std::vector<GLuint> texturesScene;
 
-// Gourd shader program id
-GLuint gourdProgramId;
-
 // Lights info
 glm::vec3 light;
 
@@ -41,21 +38,18 @@ std::vector<ObjectDescription> sceneObjects;
 // Scene materials
 std::vector<SceneMaterial> sceneMaterials;
 
-// Gourd shader path
-const char myCustomShaderVsPath[] = "shaders/myCustomShader.vert";
-const char myCustomShaderFsPath[] = "shaders/myCustomShader.frag";
+// Gourd shader program id
+GLuint myCustomShaderProgramId;
 
-// Transfer from texture to the frameBuffer
-GLuint transferProgramId;
-
-// Transfer average shader path
-const char accumulateVsPath[] = "shaders/sumTextures.vert";
-const char accumulateFsPath[] = "shaders/sumTextures.frag";
+// My custom shader path
+const char myCustomShaderVsPath[] = "shaders/myCustomGouraudShader.vert";
+const char myCustomShaderFsPath[] = "shaders/myCustomGouraudShader.frag";
 
 // Transfer from texture to the frameBuffer
 GLuint transferWeightedProgramId;
 
-// Transfer weighted shader
+// Transfer weighted shader path
+const char accumulateWeightedVsPath[] = "shaders/sumTextures.vert";
 const char accumulateWeightedFsPath[] = "shaders/sumWeightedTextures.frag";
 
 // screen texture VAO
@@ -148,12 +142,12 @@ void initSceneRenderer(const SceneDescription &sceneDescription) {
     sceneMaterials = sceneDescription.materials;
 
     // Load shader
-    gourdProgramId = createGLProgram(myCustomShaderVsPath, myCustomShaderFsPath);
+    myCustomShaderProgramId = createGLProgram(myCustomShaderVsPath, myCustomShaderFsPath);
 
     // Load transfer shader
-    gourdProgramId = createGLProgram(myCustomShaderVsPath, myCustomShaderFsPath);
+    myCustomShaderProgramId = createGLProgram(myCustomShaderVsPath, myCustomShaderFsPath);
 
-    if (gourdProgramId == 0) {
+    if (myCustomShaderProgramId == 0) {
         std::cerr << "Program was not created for shader: Gourd" << std::endl;
     }
 
@@ -204,15 +198,8 @@ void initSceneRenderer(const SceneDescription &sceneDescription) {
     glBufferData(GL_ARRAY_BUFFER, sizeof(screenTextureTexture), &screenTextureTexture, GL_STATIC_DRAW);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(glm::vec2), nullptr);
 
-    // Load transfer shader
-    transferProgramId = createGLProgram(accumulateVsPath, accumulateFsPath);
-
-    if (transferProgramId == 0) {
-        std::cerr << "Program was not created for shader: Transfer" << std::endl;
-    }
-
     // Load transfer weighted shader
-    transferWeightedProgramId = createGLProgram(accumulateVsPath, accumulateWeightedFsPath);
+    transferWeightedProgramId = createGLProgram(accumulateWeightedVsPath, accumulateWeightedFsPath);
 
     if (transferWeightedProgramId == 0) {
         std::cerr << "Program was not created for shader: Transfer weighted" << std::endl;
@@ -238,7 +225,7 @@ void reshapeScene(int w, int h) {
 void renderFrameIntoDefaultFrameBuffer(const int w, const int h, const glm::vec3 &eye, const glm::vec3 &to,
                                        float fieldOfView, float zNear, float zFar,
                                        glm::vec3 up = glm::vec3(0, 0, 1)) {
-    std::cout << "renderFrameIntoDefaultFrameBuffer" << std::endl;
+    // std::cout << "renderFrameIntoDefaultFrameBuffer" << std::endl;
 
     if (h <= 0 || w <= 0) return;
 
@@ -249,24 +236,24 @@ void renderFrameIntoDefaultFrameBuffer(const int w, const int h, const glm::vec3
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // Use my render program
-    glUseProgram(gourdProgramId);
+    glUseProgram(myCustomShaderProgramId);
 
-    GLuint pinholeLoc = glGetUniformLocation(gourdProgramId, "pinholePosition");
-    GLuint modelClipMatrixLoc = glGetUniformLocation(gourdProgramId, "worldClipMatrix");
-    GLuint modelWorldMatrixLoc = glGetUniformLocation(gourdProgramId, "modelWorldMatrix");
-    GLuint lightPositionLoc = glGetUniformLocation(gourdProgramId, "lightPosition");
-    GLuint lightColorLoc = glGetUniformLocation(gourdProgramId, "lightColor");
-    GLuint objectColorLoc = glGetUniformLocation(gourdProgramId, "objectColor");
-    GLuint ambientLightColorLoc = glGetUniformLocation(gourdProgramId, "ambientLightComponent");
-    GLuint normalMatrixLoc = glGetUniformLocation(gourdProgramId, "normalMatrix");
+    GLuint pinholeLoc = glGetUniformLocation(myCustomShaderProgramId, "pinholePosition");
+    GLuint modelClipMatrixLoc = glGetUniformLocation(myCustomShaderProgramId, "worldClipMatrix");
+    GLuint modelWorldMatrixLoc = glGetUniformLocation(myCustomShaderProgramId, "modelWorldMatrix");
+    GLuint lightPositionLoc = glGetUniformLocation(myCustomShaderProgramId, "lightPosition");
+    GLuint lightColorLoc = glGetUniformLocation(myCustomShaderProgramId, "lightColor");
+    GLuint objectColorLoc = glGetUniformLocation(myCustomShaderProgramId, "objectColor");
+    GLuint ambientLightColorLoc = glGetUniformLocation(myCustomShaderProgramId, "ambientLightComponent");
+    GLuint normalMatrixLoc = glGetUniformLocation(myCustomShaderProgramId, "normalMatrix");
 
-    GLuint objectShininessLoc = glGetUniformLocation(gourdProgramId, "objectShininess");
-    GLuint objectSpecularStrengthLoc = glGetUniformLocation(gourdProgramId, "objectSpecularStrength");
-    GLuint objectDiffuseStrengthLoc = glGetUniformLocation(gourdProgramId, "objectDiffuseStrength");
+    GLuint objectShininessLoc = glGetUniformLocation(myCustomShaderProgramId, "objectShininess");
+    GLuint objectSpecularStrengthLoc = glGetUniformLocation(myCustomShaderProgramId, "objectSpecularStrength");
+    GLuint objectDiffuseStrengthLoc = glGetUniformLocation(myCustomShaderProgramId, "objectDiffuseStrength");
 
-    GLuint textureflg_loc = glGetUniformLocation(gourdProgramId, "enableTextureFlag");
-    GLuint colorflg_loc = glGetUniformLocation(gourdProgramId, "enableMaterialFlag");
-    GLuint tex_loc = glGetUniformLocation(gourdProgramId, "tex");
+    GLuint textureflg_loc = glGetUniformLocation(myCustomShaderProgramId, "enableTextureFlag");
+    GLuint colorflg_loc = glGetUniformLocation(myCustomShaderProgramId, "enableMaterialFlag");
+    GLuint tex_loc = glGetUniformLocation(myCustomShaderProgramId, "tex");
 
     glUniform3fv(lightPositionLoc, 1, glm::value_ptr(light));
 
@@ -306,12 +293,12 @@ void renderFrameIntoDefaultFrameBuffer(const int w, const int h, const glm::vec3
 
         // Object color selection
         if (sceneObject.materialIndex.has_value()) {
-            auto objectColor = sceneMaterials[sceneObject.materialIndex.value()].color;
+            auto objectMaterial = sceneMaterials[sceneObject.materialIndex.value()];
             glUniform1i(colorflg_loc, true);
-            glUniform3f(objectColorLoc, objectColor.x / 255.0, objectColor.y / 255.0, objectColor.z / 255.0);
-            glUniform1i(objectShininessLoc, 32);
-            glUniform1f(objectSpecularStrengthLoc, 0.5);
-            glUniform1f(objectDiffuseStrengthLoc, 1);
+            glUniform3f(objectColorLoc, objectMaterial.color.x / 255.0, objectMaterial.color.y / 255.0, objectMaterial.color.z / 255.0);
+            glUniform1f(objectShininessLoc, objectMaterial.shininess);
+            glUniform1f(objectSpecularStrengthLoc, objectMaterial.specularStrength);
+            glUniform1f(objectDiffuseStrengthLoc, objectMaterial.diffuseStrength);
         } else {
             glUniform1i(colorflg_loc, false);
             glUniform3f(objectColorLoc, 0, 0, 0);
@@ -440,7 +427,7 @@ void renderFramesAndAccumulateMovingCamera(const int w, const int h, const vecto
         glCopyTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, texture_store_position + 1, 0, 0, w, h);
 
         if (texture_store_position == numberOfFrameAccumulatedTextures - 1) {
-            cout << "Frame: " << i << " accumulated" << endl;
+            // cout << "Frame: " << i << " accumulated" << endl;
             // Last texture that can be stored
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             accumulateWeightedTexturesIntoDefaultFrameBuffer(accumulatorTexColorBuffer,
@@ -448,7 +435,7 @@ void renderFramesAndAccumulateMovingCamera(const int w, const int h, const vecto
                                                              i - numberOfFrameAccumulatedTextures + 1);
 
             if (i < numberOfFrames - 1) {
-                cout << "Frame: " << i << " accumulated in 0" << endl;
+                // cout << "Frame: " << i << " accumulated in 0" << endl;
 
                 // In the last frame it is no need to copy the texture (it is displayed)
                 glBindTexture(GL_TEXTURE_2D_ARRAY, accumulatorTexColorBuffer);

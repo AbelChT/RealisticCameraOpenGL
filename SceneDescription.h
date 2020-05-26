@@ -116,6 +116,15 @@ public:
     // Color of the material (8 bits RGB)
     glm::ivec3 color = glm::ivec3(0, 0, 0);
 
+    // Shininess of the material (32 is a good value)
+    float shininess = 32.0f;
+
+    // Specular strength of the material (values in the range [0, 1])
+    float specularStrength = 0.5f;
+
+    // Diffuse strength of the material (values in the range [0, 1])
+    float diffuseStrength = 1.0f;
+
     // Constructor
     SceneMaterial() = default;
 

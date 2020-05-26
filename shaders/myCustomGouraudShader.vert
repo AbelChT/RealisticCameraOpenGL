@@ -10,7 +10,7 @@ uniform vec3 lightColor;
 uniform vec3 objectColor;
 uniform vec3 ambientLightComponent;
 uniform mat3 normalMatrix;
-uniform int objectShininess;
+uniform float objectShininess;
 uniform float objectSpecularStrength;
 uniform float objectDiffuseStrength;
 

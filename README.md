@@ -32,7 +32,9 @@ Once it is compiled, the renderer can be executed using the following command fr
 $ build/TestingOpenGL <scenePath>
 ```
 
-Where <scenePath> is the path of a scene (e.g assets/scene/scene1_with_plane.json).
+Where scenePath is the path of a scene (e.g assets/scene/scene1_with_plane.json).
+
+While the program is running, you can switch between pinhole mode and realistic camera mode with the R key. Also, you can take a picture of the screen with the S key.
 
 ## Examples
 The following images have been generated using the renderer and the scene assets/scene/scene1_with_plane.json.

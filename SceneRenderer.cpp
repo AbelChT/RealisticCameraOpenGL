@@ -10,6 +10,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/gtc/matrix_inverse.hpp>
 #include <chrono>
 #include <ctime>
 #include <cmath>
@@ -41,8 +42,8 @@ std::vector<ObjectDescription> sceneObjects;
 std::vector<SceneMaterial> sceneMaterials;
 
 // Gourd shader path
-const char gourdVsPath[] = "shaders/myGourd.vert";
-const char gourdFsPath[] = "shaders/myGourd.frag";
+const char myCustomShaderVsPath[] = "shaders/myCustomShader.vert";
+const char myCustomShaderFsPath[] = "shaders/myCustomShader.frag";
 
 // Transfer from texture to the frameBuffer
 GLuint transferProgramId;
@@ -147,10 +148,10 @@ void initSceneRenderer(const SceneDescription &sceneDescription) {
     sceneMaterials = sceneDescription.materials;
 
     // Load shader
-    gourdProgramId = createGLProgram(gourdVsPath, gourdFsPath);
+    gourdProgramId = createGLProgram(myCustomShaderVsPath, myCustomShaderFsPath);
 
     // Load transfer shader
-    gourdProgramId = createGLProgram(gourdVsPath, gourdFsPath);
+    gourdProgramId = createGLProgram(myCustomShaderVsPath, myCustomShaderFsPath);
 
     if (gourdProgramId == 0) {
         std::cerr << "Program was not created for shader: Gourd" << std::endl;
@@ -247,30 +248,32 @@ void renderFrameIntoDefaultFrameBuffer(const int w, const int h, const glm::vec3
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    // Use Gourd
+    // Use my render program
     glUseProgram(gourdProgramId);
 
-    GLuint eye_loc = glGetUniformLocation(gourdProgramId, "eye");
-    GLuint view_loc = glGetUniformLocation(gourdProgramId, "view");
-    GLuint transformation_matrix_loc = glGetUniformLocation(gourdProgramId, "transformation_matrix");
-    GLuint light_loc = glGetUniformLocation(gourdProgramId, "light");
-    GLuint kd_loc = glGetUniformLocation(gourdProgramId, "kd");
-    GLuint dcol_loc = glGetUniformLocation(gourdProgramId, "dcol");
-    GLuint ks_loc = glGetUniformLocation(gourdProgramId, "ks");
-    GLuint scol_loc = glGetUniformLocation(gourdProgramId, "scol");
-    GLuint ns_loc = glGetUniformLocation(gourdProgramId, "ns");
-    GLuint textureflg_loc = glGetUniformLocation(gourdProgramId, "textureflg");
-    GLuint colorflg_loc = glGetUniformLocation(gourdProgramId, "colorflg");
+    GLuint pinholeLoc = glGetUniformLocation(gourdProgramId, "pinholePosition");
+    GLuint modelClipMatrixLoc = glGetUniformLocation(gourdProgramId, "worldClipMatrix");
+    GLuint modelWorldMatrixLoc = glGetUniformLocation(gourdProgramId, "modelWorldMatrix");
+    GLuint lightPositionLoc = glGetUniformLocation(gourdProgramId, "lightPosition");
+    GLuint lightColorLoc = glGetUniformLocation(gourdProgramId, "lightColor");
+    GLuint objectColorLoc = glGetUniformLocation(gourdProgramId, "objectColor");
+    GLuint ambientLightColorLoc = glGetUniformLocation(gourdProgramId, "ambientLightComponent");
+    GLuint normalMatrixLoc = glGetUniformLocation(gourdProgramId, "normalMatrix");
+
+    GLuint objectShininessLoc = glGetUniformLocation(gourdProgramId, "objectShininess");
+    GLuint objectSpecularStrengthLoc = glGetUniformLocation(gourdProgramId, "objectSpecularStrength");
+    GLuint objectDiffuseStrengthLoc = glGetUniformLocation(gourdProgramId, "objectDiffuseStrength");
+
+    GLuint textureflg_loc = glGetUniformLocation(gourdProgramId, "enableTextureFlag");
+    GLuint colorflg_loc = glGetUniformLocation(gourdProgramId, "enableMaterialFlag");
     GLuint tex_loc = glGetUniformLocation(gourdProgramId, "tex");
 
-    glUniform3fv(light_loc, 1, glm::value_ptr(light));
-    glUniform1f(kd_loc, 0.5f);
-    glUniform3f(dcol_loc, 112 / 255.0, 175 / 255.0, 55 / 255.0);
-    glUniform1f(ks_loc, 0.5f);
-    glUniform3f(scol_loc, 1.0, 1.0, 1.0);
-    glUniform1f(ns_loc, 10.0f);
+    glUniform3fv(lightPositionLoc, 1, glm::value_ptr(light));
 
-    glUniform3fv(eye_loc, 1, glm::value_ptr(eye));
+    glUniform3f(lightColorLoc, 0.5, 0.5, 0.5);
+    glUniform3f(ambientLightColorLoc, 0.0, 0.0, 0.0);
+
+    glUniform3fv(pinholeLoc, 1, glm::value_ptr(eye));
 
     // Work with only this texture unit
     glActiveTexture(GL_TEXTURE0);
@@ -278,17 +281,13 @@ void renderFrameIntoDefaultFrameBuffer(const int w, const int h, const glm::vec3
     // Set texture location
     glUniform1i(tex_loc, 0);
 
-    // Transform from model space to world space
-
     // Transform from world space to view space
     glm::mat4 camera = glm::lookAt(eye, to, up);
 
     // Transform from view space to homogeneous space
-    glm::mat4 view = pers * camera;
+    glm::mat4 worldClipMatrix = pers * camera;
 
-    // Transform from model space to clip(homogeneous) space
-    // glm::mat4 modelClipMatrix
-    glUniformMatrix4fv(view_loc, 1, GL_FALSE, glm::value_ptr(view));
+    glUniformMatrix4fv(modelClipMatrixLoc, 1, GL_FALSE, glm::value_ptr(worldClipMatrix));
 
     for (auto &sceneObject : sceneObjects) {
         auto vertexArrayObject = vertexArrayObjects[sceneObject.meshIndex];
@@ -309,24 +308,33 @@ void renderFrameIntoDefaultFrameBuffer(const int w, const int h, const glm::vec3
         if (sceneObject.materialIndex.has_value()) {
             auto objectColor = sceneMaterials[sceneObject.materialIndex.value()].color;
             glUniform1i(colorflg_loc, true);
-            glUniform3f(dcol_loc, objectColor.x / 255.0, objectColor.y / 255.0, objectColor.z / 255.0);
+            glUniform3f(objectColorLoc, objectColor.x / 255.0, objectColor.y / 255.0, objectColor.z / 255.0);
+            glUniform1i(objectShininessLoc, 32);
+            glUniform1f(objectSpecularStrengthLoc, 0.5);
+            glUniform1f(objectDiffuseStrengthLoc, 1);
         } else {
             glUniform1i(colorflg_loc, false);
-            glUniform3f(dcol_loc, 0, 0, 0);
+            glUniform3f(objectColorLoc, 0, 0, 0);
         }
 
-        // Object transformations
-        auto transformationsOfObject = glm::identity<glm::mat4>();
-        transformationsOfObject = glm::translate(transformationsOfObject, sceneObject.position);
-        transformationsOfObject = glm::rotate(transformationsOfObject, glm::radians(sceneObject.rotation.x),
-                                              glm::vec3(1.0f, 0.0f, 0.0f));
-        transformationsOfObject = glm::rotate(transformationsOfObject, glm::radians(sceneObject.rotation.y),
-                                              glm::vec3(0.0f, 1.0f, 0.0f));
-        transformationsOfObject = glm::rotate(transformationsOfObject, glm::radians(sceneObject.rotation.z),
-                                              glm::vec3(0.0f, 0.0f, 1.0f));
-        transformationsOfObject = glm::scale(transformationsOfObject, sceneObject.scale);
+        // Transform from model space to world space
+        auto modelWorldMatrix = glm::identity<glm::mat4>();
+        modelWorldMatrix = glm::translate(modelWorldMatrix, sceneObject.position);
+        modelWorldMatrix = glm::rotate(modelWorldMatrix, glm::radians(sceneObject.rotation.x),
+                                       glm::vec3(1.0f, 0.0f, 0.0f));
+        modelWorldMatrix = glm::rotate(modelWorldMatrix, glm::radians(sceneObject.rotation.y),
+                                       glm::vec3(0.0f, 1.0f, 0.0f));
+        modelWorldMatrix = glm::rotate(modelWorldMatrix, glm::radians(sceneObject.rotation.z),
+                                       glm::vec3(0.0f, 0.0f, 1.0f));
+        modelWorldMatrix = glm::scale(modelWorldMatrix, sceneObject.scale);
 
-        glUniformMatrix4fv(transformation_matrix_loc, 1, GL_FALSE, glm::value_ptr(transformationsOfObject));
+        glUniformMatrix4fv(modelWorldMatrixLoc, 1, GL_FALSE, glm::value_ptr(modelWorldMatrix));
+
+        // Normal matrix
+        glm::mat3 modelToWorldMatrix3(modelWorldMatrix);
+        glm::mat3 normalMatrix = glm::inverseTranspose(modelToWorldMatrix3);
+
+        glUniformMatrix3fv(normalMatrixLoc, 1, GL_FALSE, glm::value_ptr(normalMatrix));
 
         glDrawArrays(GL_TRIANGLES, 0, vertexArrayObjectSizes[sceneObject.meshIndex]);
 

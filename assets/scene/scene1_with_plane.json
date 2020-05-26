@@ -9,7 +9,7 @@
   "meshes": [
     {
       "name": "plane",
-      "path": "assets/meshes/plane2.obj",
+      "path": "assets/meshes/plane3.obj",
       "rotate": true,
       "uniform": false
     },
@@ -94,7 +94,7 @@
         "z": 1
       },
       "mesh_name": "can",
-      "texture_name": "checker"
+      "material_name": "mate_blue"
     },
     {
       "position": {
@@ -113,7 +113,7 @@
         "z": 1
       },
       "mesh_name": "can",
-      "texture_name": "checker"
+      "material_name": "mate_blue"
     },
     {
       "position": {
@@ -132,7 +132,7 @@
         "z": 1
       },
       "mesh_name": "can",
-      "texture_name": "checker"
+      "material_name": "mate_blue"
     },
     {
       "position": {
@@ -151,7 +151,7 @@
         "z": 1
       },
       "mesh_name": "can",
-      "texture_name": "checker"
+      "material_name": "mate_blue"
     },
     {
       "position": {
@@ -170,7 +170,7 @@
         "z": 1
       },
       "mesh_name": "can",
-      "texture_name": "checker"
+      "material_name": "mate_blue"
     },
     {
       "position": {
@@ -189,7 +189,7 @@
         "z": 1
       },
       "mesh_name": "can",
-      "texture_name": "checker"
+      "material_name": "mate_blue"
     },
     {
       "position": {
@@ -208,7 +208,7 @@
         "z": 1
       },
       "mesh_name": "can",
-      "texture_name": "checker"
+      "material_name": "mate_blue"
     },
     {
       "position": {
@@ -227,7 +227,7 @@
         "z": 1
       },
       "mesh_name": "can",
-      "texture_name": "checker"
+      "material_name": "mate_blue"
     },
     {
       "position": {
@@ -251,9 +251,9 @@
   ],
   "light": {
     "position": {
-      "x": 15,
-      "y": 18,
-      "z": 19
+      "x": -3,
+      "y": 0,
+      "z": -4.5
     }
   },
   "camera": {

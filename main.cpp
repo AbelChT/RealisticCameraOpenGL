@@ -10,9 +10,9 @@
 #include "SceneRenderer.h"
 #include "SceneReader.h"
 
-void initEngine() {
+void initEngine(const char scenePath[]) {
     // Load scene
-    auto returned_data = readScene("assets/scene/scene1_with_plane.json");
+    auto returned_data = readScene(scenePath);
 
     // Init engine
     initSceneRenderer(returned_data.value());
@@ -27,7 +27,16 @@ void callbackOpenGLReshape(GLFWwindow *win, int w, int h) {
 bool style = false;
 
 void callbackOpenGLDisplay(GLFWwindow *win) {
-    std::cout << "Callback: Display" << std::endl;
+    std::cout << "------------------------------" << std::endl
+              << std::endl;
+    if (!style)
+        std::cout << "Display with pinhole mode" << std::endl;
+    else
+        std::cout << "Display with realistic camera mode" << std::endl;
+
+    std::cout << std::endl
+              << "------------------------------" << std::endl;
+
     int w, h;
     glfwGetWindowSize(win, &w, &h);
 
@@ -60,7 +69,7 @@ void callbackOpenGLKeyboard(GLFWwindow *win, int key, int s, int act, int mod) {
 
             // Save image
             PNG lib_png(w, h, pixels, true);
-            lib_png.save("out/rasterized_dof_area.png");
+            lib_png.save("out/image.png");
             cout << "Image saved" << endl;
             break;
     }
@@ -152,6 +161,17 @@ void APIENTRY glDebugOutput(GLenum source,
 }
 
 int main(int argc, char *argv[]) {
+    // Scene path
+    char *scenePath;
+
+    if (argc != 2) {
+        cout << "You must provide a scene file" << std::endl;
+        return -1;
+    } else {
+        scenePath = argv[1];
+        cout << "Scene: " << argv[1] << " will be renderized" << std::endl;
+    }
+
     // Init OpenGL
     glfwInit();
 
@@ -204,8 +224,17 @@ int main(int argc, char *argv[]) {
         std::cout << "Debug output not initialized" << std::endl;
     }
 
+    // Display instructions
+    std::cout << "------------------------------" << std::endl
+              << std::endl
+              << "Usage instructions:" << std::endl
+              << "Key R: Change between pinhole mode and realistic camera mode" << std::endl
+              << "Key S: Save image in out/image.png" << std::endl
+              << std::endl
+              << "------------------------------" << std::endl;
+
     // Init graphical engine
-    initEngine();
+    initEngine(scenePath);
 
     // Set callbacks for display and reshape
     glfwSetFramebufferSizeCallback(win, callbackOpenGLReshape);

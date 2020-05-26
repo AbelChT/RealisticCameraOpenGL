@@ -27,7 +27,8 @@ std::vector<GLuint> vertexArrayObjectSizes;
 std::vector<GLuint> texturesScene;
 
 // Lights info
-glm::vec3 light;
+SceneLight sceneLight;
+// glm::vec3 light;
 
 // Scene camera
 SceneCamera sceneCamera;
@@ -154,7 +155,8 @@ void initSceneRenderer(const SceneDescription &sceneDescription) {
     glClearColor(0, 0, 0, 0);
 
     // Load lights
-    light = sceneDescription.light.position;
+    sceneLight = sceneDescription.light;
+    // light = sceneDescription.light.position;
 
     // Configure OpenGL
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -255,10 +257,10 @@ void renderFrameIntoDefaultFrameBuffer(const int w, const int h, const glm::vec3
     GLuint colorflg_loc = glGetUniformLocation(myCustomShaderProgramId, "enableMaterialFlag");
     GLuint tex_loc = glGetUniformLocation(myCustomShaderProgramId, "tex");
 
-    glUniform3fv(lightPositionLoc, 1, glm::value_ptr(light));
+    glUniform3fv(lightPositionLoc, 1, glm::value_ptr(sceneLight.position));
 
-    glUniform3f(lightColorLoc, 0.5, 0.5, 0.5);
-    glUniform3f(ambientLightColorLoc, 0.0, 0.0, 0.0);
+    glUniform3fv(lightColorLoc, 1, glm::value_ptr(sceneLight.color));
+    glUniform3fv(ambientLightColorLoc, 1, glm::value_ptr(sceneLight.ambientColor));
 
     glUniform3fv(pinholeLoc, 1, glm::value_ptr(eye));
 

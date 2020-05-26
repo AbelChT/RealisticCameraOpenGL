@@ -101,6 +101,15 @@ public:
     // Position of the scene light (meters)
     glm::vec3 position = glm::vec3(0, 0, 0);
 
+    // Intensity in each of the components of the scene light (range [0,1])
+    // TODO: Include this value in the constructor
+    glm::vec3 color = glm::vec3(0.5, 0.5, 0.5);
+
+    // Intensity in each of the components of the ambient scene light (range [0,1])
+    // TODO: Include this value in the constructor
+    // TODO: This variable must be keep outside this structure if more than one light be used
+    glm::vec3 ambientColor = glm::vec3(0, 0, 0);
+
     // Constructor
     SceneLight() = default;
 
@@ -116,12 +125,15 @@ public:
     // Color of the material (8 bits RGB)
     glm::ivec3 color = glm::ivec3(0, 0, 0);
 
+    // TODO: Include this value in the constructor
     // Shininess of the material (32 is a good value)
     float shininess = 32.0f;
 
+    // TODO: Include this value in the constructor
     // Specular strength of the material (values in the range [0, 1])
     float specularStrength = 0.5f;
 
+    // TODO: Include this value in the constructor
     // Diffuse strength of the material (values in the range [0, 1])
     float diffuseStrength = 1.0f;
 

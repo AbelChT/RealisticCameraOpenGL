@@ -9,7 +9,7 @@
   "meshes": [
     {
       "name": "plane",
-      "path": "assets/meshes/plane3.obj",
+      "path": "assets/meshes/plane.obj",
       "rotate": true,
       "uniform": false
     },

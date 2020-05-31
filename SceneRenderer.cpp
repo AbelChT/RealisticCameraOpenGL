@@ -42,9 +42,21 @@ std::vector<SceneMaterial> sceneMaterials;
 // Gourd shader program id
 GLuint myCustomShaderProgramId;
 
+#define USE_GOURAUD 1
+
+#if USE_GOURAUD
+
 // My custom shader path
 const char myCustomShaderVsPath[] = "shaders/myCustomGouraudShader.vert";
 const char myCustomShaderFsPath[] = "shaders/myCustomGouraudShader.frag";
+
+#else
+
+// My custom shader path
+const char myCustomShaderVsPath[] = "shaders/myCustomPhongShader.vert";
+const char myCustomShaderFsPath[] = "shaders/myCustomPhongShader.frag";
+
+#endif
 
 // Transfer from texture to the frameBuffer
 GLuint transferWeightedProgramId;

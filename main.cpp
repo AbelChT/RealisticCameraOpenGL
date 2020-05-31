@@ -69,7 +69,7 @@ void callbackOpenGLKeyboard(GLFWwindow *win, int key, int s, int act, int mod) {
 
             // Save image
             PNG lib_png(w, h, pixels, true);
-            lib_png.save("out/image.png");
+            lib_png.save("out/image_phong.png");
             cout << "Image saved" << endl;
             break;
     }

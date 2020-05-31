@@ -6,11 +6,14 @@ uniform mat4 worldClipMatrix;
 uniform mat4 modelWorldMatrix;
 uniform vec3 pinholePosition;
 uniform vec3 lightPosition;
+// I_efect
 uniform vec3 lightColor;
 uniform vec3 objectColor;
 uniform vec3 ambientLightComponent;
 uniform mat3 normalMatrix;
+// m
 uniform float objectShininess;
+// C_spec
 uniform float objectSpecularStrength;
 uniform float objectDiffuseStrength;
 

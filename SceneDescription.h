@@ -102,45 +102,58 @@ public:
     glm::vec3 position = glm::vec3(0, 0, 0);
 
     // Intensity in each of the components of the scene light (range [0,1])
-    // TODO: Include this value in the constructor
     glm::vec3 color = glm::vec3(0.5, 0.5, 0.5);
-
-    // Intensity in each of the components of the ambient scene light (range [0,1])
-    // TODO: Include this value in the constructor
-    // TODO: This variable must be keep outside this structure if more than one light be used
-    glm::vec3 ambientColor = glm::vec3(0.1, 0.1, 0.1);
 
     // Constructor
     SceneLight() = default;
 
-    explicit SceneLight(const glm::vec3 &position);
+    SceneLight(const glm::vec3 &position, const glm::vec3 &color);
 
     // Default destructor
     ~SceneLight() = default;
 };
 
+// Represent the ambient light in the scene
+struct AmbientLight {
+public:
+    // Intensity in each of the components of the ambient scene light RGB (range [0,1])
+    glm::vec3 color = glm::vec3(0, 0, 0);
+
+    // Constructor
+    AmbientLight() = default;
+
+    explicit AmbientLight(const glm::vec3 &color);
+
+    // Default destructor
+    ~AmbientLight() = default;
+};
+
 // Represent a material in the scene
 struct SceneMaterial {
 public:
-    // Color of the material (8 bits RGB)
-    glm::ivec3 color = glm::ivec3(0, 0, 0);
+    // Intensity in each of the components of the material color RGB (range [0,1])
+    glm::vec3 color = glm::vec3(0, 0, 0);
 
-    // TODO: Include this value in the constructor
     // Shininess of the material (32 is a good value)
     float shininess = 32.0f;
 
-    // TODO: Include this value in the constructor
     // Specular strength of the material (values in the range [0, 1])
     float specularStrength = 0.5f;
 
-    // TODO: Include this value in the constructor
     // Diffuse strength of the material (values in the range [0, 1])
     float diffuseStrength = 1.0f;
+
+    // Albedo texture index of the material
+    std::optional<unsigned int> albedoTextureIndex = {};
+
+    // Normal texture index of the material
+    std::optional<unsigned int> normalTextureIndex = {};
 
     // Constructor
     SceneMaterial() = default;
 
-    explicit SceneMaterial(const glm::ivec3 &color);
+    SceneMaterial(const glm::vec3 &color, float shininess, float specularStrength, float diffuseStrength,
+                  const optional<unsigned int> &albedoTextureIndex, const optional<unsigned int> &normalTextureIndex);
 
     // Default destructor
     ~SceneMaterial() = default;
@@ -159,11 +172,8 @@ public:
     // Scale of the object
     glm::vec3 scale = glm::vec3(0, 0, 0);
 
-    // Texture index of the object
-    std::optional<unsigned int> textureIndex = {};
-
     // Material index of the object
-    std::optional<unsigned int> materialIndex = {};
+    unsigned int materialIndex = 0;
 
     // Mesh index of the object
     unsigned int meshIndex = 0;
@@ -172,8 +182,7 @@ public:
     ObjectDescription() = default;
 
     ObjectDescription(const glm::vec3 &position, const glm::vec3 &rotation, const glm::vec3 &scale,
-                      std::optional<unsigned int> textureIndex, std::optional<unsigned int> materialIndex,
-                      unsigned int meshIndex);
+                      unsigned int materialIndex, unsigned int meshIndex);
 
     // Default destructor
     ~ObjectDescription() = default;
@@ -197,13 +206,16 @@ public:
     // Light in the scene (only one from now)
     SceneLight light;
 
+    // Ambient light in the scene
+    AmbientLight ambientLight;
+
     // Camera in the scene
     SceneCamera camera;
 
     // Constructor
-    SceneDescription(vector<SceneMesh> meshes, vector<PNG> textures, vector<SceneMaterial> materials,
-                     vector<ObjectDescription> objects,
-                     const SceneLight &lights, const SceneCamera &camera);
+    SceneDescription(vector<SceneMesh> meshes, vector<PNG> textures,
+                     vector<SceneMaterial> materials, vector<ObjectDescription> objects,
+                     const SceneLight &light, const AmbientLight &ambientLight, const SceneCamera &camera);
 
     // Default destructor
     ~SceneDescription() = default;

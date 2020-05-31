@@ -37,20 +37,28 @@ CameraDefinition::CameraDefinition(const glm::vec3 &position, const glm::vec3 &l
         : position(position), lookAt(lookAt), sensorSize(sensorSize), focalLength(focalLength), fStop(fStop),
           zFar(zFar) {}
 
-SceneLight::SceneLight(const glm::vec3 &position)
-        : position(position) {}
+SceneLight::SceneLight(const glm::vec3 &position, const glm::vec3 &color) : position(position), color(color) {}
 
-SceneMaterial::SceneMaterial(const glm::ivec3 &color)
-        : color(color) {}
+AmbientLight::AmbientLight(const glm::vec3 &color) : color(color) {}
+
+SceneMaterial::SceneMaterial(const glm::vec3 &color, float shininess, float specularStrength, float diffuseStrength,
+                             const optional<unsigned int> &albedoTextureIndex,
+                             const optional<unsigned int> &normalTextureIndex) : color(color), shininess(shininess),
+                                                                                 specularStrength(specularStrength),
+                                                                                 diffuseStrength(diffuseStrength),
+                                                                                 albedoTextureIndex(albedoTextureIndex),
+                                                                                 normalTextureIndex(
+                                                                                         normalTextureIndex) {}
 
 ObjectDescription::ObjectDescription(const glm::vec3 &position, const glm::vec3 &rotation, const glm::vec3 &scale,
-                                     std::optional<unsigned int> textureIndex,
-                                     std::optional<unsigned int> materialIndex, unsigned int meshIndex)
-        : position(position), rotation(rotation), scale(scale), textureIndex(textureIndex),
-          materialIndex(materialIndex), meshIndex(meshIndex) {}
+                                     unsigned int materialIndex, unsigned int meshIndex) : position(position),
+                                                                                           rotation(rotation),
+                                                                                           scale(scale),
+                                                                                           materialIndex(materialIndex),
+                                                                                           meshIndex(meshIndex) {}
 
-SceneDescription::SceneDescription(vector<SceneMesh> meshes, vector<PNG> textures, vector<SceneMaterial> materials,
-                                   vector<ObjectDescription> objects, const SceneLight &light,
-                                   const SceneCamera &camera)
-        : meshes(std::move(meshes)), textures(std::move(textures)), materials(std::move(materials)),
-          objects(std::move(objects)), light(light), camera(camera) {}
+SceneDescription::SceneDescription(vector<SceneMesh> meshes, vector<PNG> textures,
+                                   vector<SceneMaterial> materials, vector<ObjectDescription> objects,
+                                   const SceneLight &light, const AmbientLight &ambientLight, const SceneCamera &camera)
+        : meshes(std::move(meshes)), textures(std::move(textures)), materials(std::move(materials)), objects(std::move(objects)), light(light),
+          ambientLight(ambientLight), camera(camera) {}

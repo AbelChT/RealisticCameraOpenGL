@@ -122,15 +122,44 @@ std::optional<SceneDescription> readScene(const std::string &scenePath) {
         for (auto &i: materials) {
             auto materialName = i["name"].get<std::string>();
             auto materialColor = i["color"];
-            auto colorVector = glm::ivec3(materialColor["r"].get<int>(),
-                                          materialColor["g"].get<int>(),
-                                          materialColor["b"].get<int>());
+            auto colorVector = glm::vec3(materialColor["r"].get<float>(),
+                                          materialColor["g"].get<float>(),
+                                          materialColor["b"].get<float>());
+
+            // Obtain index of the albedo texture
+            std::optional<unsigned int> albedoTextureIndex = {};
+
+            if (i.contains("albedo_texture_name")) {
+                auto textureName = i["albedo_texture_name"].get<std::string>();
+                if (!texture_position_name_association.contains(textureName))
+                    throw SceneReadingException("Error loading material, non existent texture: " + textureName);
+
+                albedoTextureIndex = texture_position_name_association[textureName];
+            }
+
+            // Obtain index of the normal texture
+            std::optional<unsigned int> normalTextureIndex = {};
+
+            if (i.contains("normal_texture_name")) {
+                auto textureName = i["normal_texture_name"].get<std::string>();
+                if (!texture_position_name_association.contains(textureName))
+                    throw SceneReadingException("Error loading material, non existent texture: " + textureName);
+
+                normalTextureIndex = texture_position_name_association[textureName];
+            }
+
+            // Obtain light behaviour components
+            auto shininess = i["shininess"].get<float>();
+            auto specularStrength = i["specular_strength"].get<float>();
+            auto diffuseStrength = i["diffuse_strength"].get<float>();
+
 
             // Id of the material
             unsigned int materialPositionInVector = materials_position_name_association.size();
 
             // Scene material
-            auto sceneMaterial = SceneMaterial(colorVector);
+            auto sceneMaterial = SceneMaterial(colorVector, shininess, specularStrength, diffuseStrength,
+                                               albedoTextureIndex, normalTextureIndex);
 
             // Save material
             materials_vector[materialPositionInVector] = sceneMaterial;
@@ -154,19 +183,10 @@ std::optional<SceneDescription> readScene(const std::string &scenePath) {
 
             auto meshIndex = meshes_position_name_association[meshName];
 
-            // Obtain index of the texture
-            std::optional<unsigned int> textureIndex = {};
 
-            if (i.contains("texture_name")) {
-                auto textureName = i["texture_name"].get<std::string>();
-                if (!texture_position_name_association.contains(textureName))
-                    throw SceneReadingException("Error loading object, non existent texture: " + textureName);
-
-                textureIndex = texture_position_name_association[textureName];
-            }
 
             // Obtain index of the material
-            std::optional<unsigned int> materialIndex = {};
+            unsigned int materialIndex;
 
             if (i.contains("material_name")) {
                 auto materialName = i["material_name"].get<std::string>();
@@ -174,6 +194,8 @@ std::optional<SceneDescription> readScene(const std::string &scenePath) {
                     throw SceneReadingException("Error loading object, non existent material: " + materialName);
 
                 materialIndex = materials_position_name_association[materialName];
+            } else {
+                throw SceneReadingException("Error loading object, material not provided");
             }
 
             // Obtain position
@@ -195,19 +217,33 @@ std::optional<SceneDescription> readScene(const std::string &scenePath) {
 
 
             // Create object description
-            objects_vector[objects_index] = ObjectDescription(positionVector, rotationVector, scaleVector, textureIndex,
+            objects_vector[objects_index] = ObjectDescription(positionVector, rotationVector, scaleVector,
                                                               materialIndex, meshIndex);
             ++objects_index;
         }
 
         // Load light
-        auto light = jsonDeserialized["light"];
-        auto lightPosition = light["position"];
-        auto lightPositionVector = glm::vec3(lightPosition["x"].get<float>(),
-                                             lightPosition["y"].get<float>(),
-                                             lightPosition["z"].get<float>());
+        auto sceneLightJson = jsonDeserialized["light"];
+        auto sceneLightPosition = sceneLightJson["position"];
+        auto sceneLightPositionVector = glm::vec3(sceneLightPosition["x"].get<float>(),
+                                                  sceneLightPosition["y"].get<float>(),
+                                                  sceneLightPosition["z"].get<float>());
+        auto sceneLightColor = sceneLightJson["color"];
+        auto sceneLightColorVector = glm::vec3(sceneLightColor["r"].get<float>(),
+                                                sceneLightColor["g"].get<float>(),
+                                                sceneLightColor["b"].get<float>());
 
-        auto sceneLight = SceneLight(lightPositionVector);
+        auto sceneLight = SceneLight(sceneLightPositionVector, sceneLightColorVector);
+
+        // Load ambient light
+        auto ambientLightJson = jsonDeserialized["ambient_light"];
+
+        auto ambientLightColor = ambientLightJson["color"];
+        auto ambientLightColorVector = glm::vec3(ambientLightColor["r"].get<float>(),
+                                                  ambientLightColor["g"].get<float>(),
+                                                  ambientLightColor["b"].get<float>());
+
+        auto ambientLight = AmbientLight(ambientLightColorVector);
 
         // Load camera
         auto camera = jsonDeserialized["camera"];
@@ -235,7 +271,7 @@ std::optional<SceneDescription> readScene(const std::string &scenePath) {
         auto sceneCamera = cameraDefinitionToSceneCamera(cameraDefinition);
 
         return SceneDescription(meshes_vector, textures_vector, materials_vector, objects_vector, sceneLight,
-                                sceneCamera);
+                                ambientLight, sceneCamera);
     }
     catch (json::exception &e) {
         // Bad input format

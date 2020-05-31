@@ -3,7 +3,6 @@ uniform sampler2D tex;
 
 // Texture or color controller
 uniform bool enableTextureFlag;
-uniform bool enableMaterialFlag;
 
 uniform vec3 pinholePosition;
 uniform vec3 lightPosition;
@@ -45,14 +44,16 @@ void main()
     float specularImpact = pow(max(dot(viewDirection, reflectDirection), 0.0), objectShininess);
     vec3 specularComponent = objectSpecularStrength * specularImpact * lightColor;
 
-    // Calculate the color
-    vec3 calculatedColor = (ambientLightComponent + diffuseComponent + specularComponent) * objectColor;
+    // Obtain fragment object color
+    vec3 fragmentObjectColor = objectColor;
 
-    if (enableTextureFlag && !enableMaterialFlag){
-        color = texture(tex, sdata.textureLocation.st);
-    } else if (!enableTextureFlag && enableMaterialFlag){
-        color = vec4(calculatedColor, 1.0);
-    } else {
-        color = texture(tex, sdata.textureLocation.st) * 0.5 + vec4(calculatedColor, 1.0) * 0.5;
+    // Apply texture
+    if (enableTextureFlag){
+        fragmentObjectColor = texture(tex, sdata.textureLocation.st).rgb * fragmentObjectColor;
     }
+
+    // Calculate the color
+    vec3 calculatedColor = (ambientLightComponent + diffuseComponent + specularComponent) * fragmentObjectColor;
+
+    color = vec4(calculatedColor, 1.0);
 }

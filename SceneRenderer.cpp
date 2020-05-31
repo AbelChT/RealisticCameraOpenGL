@@ -28,7 +28,7 @@ std::vector<GLuint> texturesScene;
 
 // Lights info
 SceneLight sceneLight;
-// glm::vec3 light;
+AmbientLight ambientLight;
 
 // Scene camera
 SceneCamera sceneCamera;
@@ -168,7 +168,7 @@ void initSceneRenderer(const SceneDescription &sceneDescription) {
 
     // Load lights
     sceneLight = sceneDescription.light;
-    // light = sceneDescription.light.position;
+    ambientLight = sceneDescription.ambientLight;
 
     // Configure OpenGL
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -266,13 +266,13 @@ void renderFrameIntoDefaultFrameBuffer(const int w, const int h, const glm::vec3
     GLuint objectDiffuseStrengthLoc = glGetUniformLocation(myCustomShaderProgramId, "objectDiffuseStrength");
 
     GLuint textureflg_loc = glGetUniformLocation(myCustomShaderProgramId, "enableTextureFlag");
-    GLuint colorflg_loc = glGetUniformLocation(myCustomShaderProgramId, "enableMaterialFlag");
+    // GLuint colorflg_loc = glGetUniformLocation(myCustomShaderProgramId, "enableMaterialFlag");
     GLuint tex_loc = glGetUniformLocation(myCustomShaderProgramId, "tex");
 
     glUniform3fv(lightPositionLoc, 1, glm::value_ptr(sceneLight.position));
 
     glUniform3fv(lightColorLoc, 1, glm::value_ptr(sceneLight.color));
-    glUniform3fv(ambientLightColorLoc, 1, glm::value_ptr(sceneLight.ambientColor));
+    glUniform3fv(ambientLightColorLoc, 1, glm::value_ptr(ambientLight.color));
 
     glUniform3fv(pinholeLoc, 1, glm::value_ptr(eye));
 
@@ -297,25 +297,20 @@ void renderFrameIntoDefaultFrameBuffer(const int w, const int h, const glm::vec3
         glEnableVertexAttribArray(1);
         glEnableVertexAttribArray(2);
 
-        // Object texture selection
-        if (sceneObject.textureIndex.has_value()) {
-            glBindTexture(GL_TEXTURE_2D, texturesScene[sceneObject.textureIndex.value()]);
+        // Object material selection
+        auto objectMaterial = sceneMaterials[sceneObject.materialIndex];
+        // glUniform1i(colorflg_loc, true);
+        glUniform3f(objectColorLoc, objectMaterial.color.x, objectMaterial.color.y, objectMaterial.color.z);
+        glUniform1f(objectShininessLoc, objectMaterial.shininess);
+        glUniform1f(objectSpecularStrengthLoc, objectMaterial.specularStrength);
+        glUniform1f(objectDiffuseStrengthLoc, objectMaterial.diffuseStrength);
+
+        // Object albedo texture selection
+        if (objectMaterial.albedoTextureIndex.has_value()) {
+            glBindTexture(GL_TEXTURE_2D, texturesScene[objectMaterial.albedoTextureIndex.value()]);
             glUniform1i(textureflg_loc, true);
         } else {
             glUniform1i(textureflg_loc, false);
-        }
-
-        // Object color selection
-        if (sceneObject.materialIndex.has_value()) {
-            auto objectMaterial = sceneMaterials[sceneObject.materialIndex.value()];
-            glUniform1i(colorflg_loc, true);
-            glUniform3f(objectColorLoc, objectMaterial.color.x / 255.0, objectMaterial.color.y / 255.0, objectMaterial.color.z / 255.0);
-            glUniform1f(objectShininessLoc, objectMaterial.shininess);
-            glUniform1f(objectSpecularStrengthLoc, objectMaterial.specularStrength);
-            glUniform1f(objectDiffuseStrengthLoc, objectMaterial.diffuseStrength);
-        } else {
-            glUniform1i(colorflg_loc, false);
-            glUniform3f(objectColorLoc, 0, 0, 0);
         }
 
         // Transform from model space to world space
@@ -339,8 +334,8 @@ void renderFrameIntoDefaultFrameBuffer(const int w, const int h, const glm::vec3
 
         glDrawArrays(GL_TRIANGLES, 0, vertexArrayObjectSizes[sceneObject.meshIndex]);
 
-        // Unbind texture
-        if (sceneObject.textureIndex.has_value()) {
+        // Unbind albedo texture
+        if (objectMaterial.albedoTextureIndex.has_value()) {
             glBindTexture(GL_TEXTURE_2D, 0);
         }
 

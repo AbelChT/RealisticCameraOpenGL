@@ -1,0 +1,146 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "scene_schema.json",
+  "title": "Scene description specification",
+  "type": "object",
+  "properties": {
+    "name": {
+      "description": "Name of the scene",
+      "type": "string"
+    },
+    "textures": {
+      "description": "Textures used in the scene",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "description": "Name of the texture",
+            "type": "string"
+          },
+          "path": {
+            "description": "Path of the texture",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "path"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "meshes": {
+      "description": "Meshes used in the scene",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "description": "Name of the mesh",
+            "type": "string"
+          },
+          "path": {
+            "description": "Path of the mesh",
+            "type": "string"
+          },
+          "rotate": {
+            "description": "Rotate the mesh",
+            "type": "boolean"
+          },
+          "uniform": {
+            "description": "Uniform the mesh",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "name",
+          "path",
+          "rotate",
+          "uniform"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "materials": {
+      "description": "Materials used in the scene",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "description": "Name of the material",
+            "type": "string"
+          },
+          "color": {
+            "$ref": "#/definitions/color"
+          },
+          "shininess": {
+            "description": "Shininess factor (m)",
+            "type": "number",
+            "minimum": 1,
+            "maximum": 300
+          },
+          "specular_strength": {
+            "description": "Strength of specular component (C_spec)",
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "diffuse_strength": {
+            "description": "Strength of diffuse component (C_diff)",
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          }
+        },
+        "required": [
+          "name",
+          "color",
+          "shininess",
+          "specular_strength",
+          "diffuse_strength"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "name",
+    "textures",
+    "meshes"
+  ],
+  "additionalProperties": false,
+  "definitions": {
+    "color": {
+      "description": "Color of something",
+      "type": "object",
+      "properties": {
+        "r": {
+          "description": "Intensity of red",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "g": {
+          "description": "Intensity of green, range [0, 1]",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "b": {
+          "description": "Intensity of blue",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      },
+      "required": [
+        "r",
+        "g",
+        "b"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

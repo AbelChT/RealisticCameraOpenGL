@@ -28,7 +28,8 @@
           "path"
         ],
         "additionalProperties": false
-      }
+      },
+      "minItems": 1
     },
     "meshes": {
       "description": "Meshes used in the scene",
@@ -60,7 +61,8 @@
           "uniform"
         ],
         "additionalProperties": false
-      }
+      },
+      "minItems": 1
     },
     "materials": {
       "description": "Materials used in the scene",
@@ -92,6 +94,14 @@
             "type": "number",
             "minimum": 0,
             "maximum": 1
+          },
+          "albedo_texture_name": {
+            "description": "Texture albedo",
+            "type": "string"
+          },
+          "normal_texture_name": {
+            "description": "Texture normal",
+            "type": "string"
           }
         },
         "required": [
@@ -102,7 +112,111 @@
           "diffuse_strength"
         ],
         "additionalProperties": false
-      }
+      },
+      "minItems": 1
+    },
+    "objects": {
+      "description": "Objects used in the scene",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "position": {
+            "$ref": "#/definitions/position"
+          },
+          "rotation": {
+            "$ref": "#/definitions/rotation"
+          },
+          "scale": {
+            "$ref": "#/definitions/scale"
+          },
+          "mesh_name": {
+            "description": "Name of the mesh",
+            "type": "string"
+          },
+          "material_name": {
+            "description": "Name of the material",
+            "type": "string"
+          }
+        },
+        "required": [
+          "position",
+          "rotation",
+          "scale",
+          "mesh_name",
+          "material_name"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 1
+    },
+    "light": {
+      "description": "Light of the scene",
+      "properties": {
+        "position": {
+          "$ref": "#/definitions/position"
+        },
+        "color": {
+          "$ref": "#/definitions/color"
+        }
+      },
+      "required": [
+        "position",
+        "color"
+      ],
+      "additionalProperties": false
+    },
+    "ambient_light": {
+      "description": "Light of the scene",
+      "properties": {
+        "color": {
+          "$ref": "#/definitions/color"
+        }
+      },
+      "required": [
+        "color"
+      ],
+      "additionalProperties": false
+    },
+    "camera": {
+      "description": "Camera of the scene",
+      "properties": {
+        "position": {
+          "$ref": "#/definitions/position"
+        },
+        "look_at": {
+          "$ref": "#/definitions/position"
+        },
+        "sensor_size": {
+          "description": "Size of sensor (mm)",
+          "type": "number",
+          "minimum": 0
+        },
+        "focal_length": {
+          "description": "Focal length (mm)",
+          "type": "number",
+          "minimum": 0
+        },
+        "f_stop": {
+          "description": "F-Stop",
+          "type": "number",
+          "minimum": 1
+        },
+        "z_far": {
+          "description": "Far distance to be rendered (m)",
+          "type": "number",
+          "minimum": 1
+        }
+      },
+      "required": [
+        "position",
+        "look_at",
+        "sensor_size",
+        "focal_length",
+        "f_stop",
+        "z_far"
+      ],
+      "additionalProperties": false
     }
   },
   "required": [
@@ -139,6 +253,81 @@
         "r",
         "g",
         "b"
+      ],
+      "additionalProperties": false
+    },
+    "position": {
+      "description": "Position",
+      "type": "object",
+      "properties": {
+        "x": {
+          "description": "Position in x (meters)",
+          "type": "number"
+        },
+        "y": {
+          "description": "Position in y (meters)",
+          "type": "number"
+        },
+        "z": {
+          "description": "Position in z (meters)",
+          "type": "number"
+        }
+      },
+      "required": [
+        "x",
+        "y",
+        "z"
+      ],
+      "additionalProperties": false
+    },
+    "rotation": {
+      "description": "Rotation",
+      "type": "object",
+      "properties": {
+        "x": {
+          "description": "Rotation in x (degrees)",
+          "type": "number"
+        },
+        "y": {
+          "description": "Rotation in y (degrees)",
+          "type": "number"
+        },
+        "z": {
+          "description": "Rotation in z (degrees)",
+          "type": "number"
+        }
+      },
+      "required": [
+        "x",
+        "y",
+        "z"
+      ],
+      "additionalProperties": false
+    },
+    "scale": {
+      "description": "Scale",
+      "type": "object",
+      "properties": {
+        "x": {
+          "description": "Scale in x",
+          "type": "number",
+          "minimum": 0
+        },
+        "y": {
+          "description": "Scale in y",
+          "type": "number",
+          "minimum": 0
+        },
+        "z": {
+          "description": "Scale in z",
+          "type": "number",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "x",
+        "y",
+        "z"
       ],
       "additionalProperties": false
     }

@@ -8,9 +8,15 @@
   ],
   "meshes": [
     {
+      "name": "plane",
+      "path": "assets/meshes/plane.obj",
+      "rotate": true,
+      "uniform": false
+    },
+    {
       "name": "can",
-      "path": "assets/meshes/can.obj",
-      "rotate": false,
+      "path": "assets/meshes/can6.obj",
+      "rotate": true,
       "uniform": false
     }
   ],
@@ -28,6 +34,22 @@
       "color": {
         "r": 255,
         "g": 30,
+        "b": 30
+      }
+    },
+    {
+      "name": "mate_green",
+      "color": {
+        "r": 30,
+        "g": 255,
+        "b": 30
+      }
+    },
+    {
+      "name": "mate_green_red",
+      "color": {
+        "r": 180,
+        "g": 180,
         "b": 30
       }
     }
@@ -50,11 +72,30 @@
         "z": 1
       },
       "mesh_name": "can",
-      "material_name": "mate_blue"
+      "material_name": "mate_green"
     },
     {
       "position": {
         "x": 0,
+        "y": 0.1,
+        "z": 0
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "mesh_name": "can",
+      "material_name": "mate_green"
+    },
+    {
+      "position": {
+        "x": -0.2,
         "y": 0.1,
         "z": 0
       },
@@ -74,25 +115,6 @@
     {
       "position": {
         "x": -0.2,
-        "y": 0.1,
-        "z": 0
-      },
-      "rotation": {
-        "x": 0,
-        "y": 0,
-        "z": 0
-      },
-      "scale": {
-        "x": 1,
-        "y": 1,
-        "z": 1
-      },
-      "mesh_name": "can",
-      "texture_name": "checker"
-    },
-    {
-      "position": {
-        "x": -0.2,
         "y": -0.1,
         "z": 0
       },
@@ -107,7 +129,7 @@
         "z": 1
       },
       "mesh_name": "can",
-      "texture_name": "checker"
+      "material_name": "mate_red"
     },
     {
       "position": {
@@ -126,7 +148,7 @@
         "z": 1
       },
       "mesh_name": "can",
-      "texture_name": "checker"
+      "material_name": "mate_blue"
     },
     {
       "position": {
@@ -145,7 +167,7 @@
         "z": 1
       },
       "mesh_name": "can",
-      "texture_name": "checker"
+      "material_name": "mate_blue"
     },
     {
       "position": {
@@ -164,7 +186,7 @@
         "z": 1
       },
       "mesh_name": "can",
-      "texture_name": "checker"
+      "material_name": "mate_green"
     },
     {
       "position": {
@@ -183,7 +205,7 @@
         "z": 1
       },
       "mesh_name": "can",
-      "texture_name": "checker"
+      "material_name": "mate_green"
     },
     {
       "position": {
@@ -202,7 +224,7 @@
         "z": 1
       },
       "mesh_name": "can",
-      "texture_name": "checker"
+      "material_name": "mate_red"
     },
     {
       "position": {
@@ -221,14 +243,33 @@
         "z": 1
       },
       "mesh_name": "can",
-      "texture_name": "checker"
+      "material_name": "mate_red"
+    },
+    {
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "mesh_name": "plane",
+      "material_name": "mate_green_red"
     }
   ],
   "light": {
     "position": {
-      "x": -3,
+      "x": 3,
       "y": 0,
-      "z": -4.5
+      "z": 4.5
     }
   },
   "camera": {

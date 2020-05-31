@@ -126,10 +126,14 @@ bool OBJ::load(const string &fname, const glm::mat4 &xf, const bool do_normaliza
     if (do_normalization)
         normalize();
 
-    if (fvn.size() == 0)
+    if (fvn.empty()) {
+        std::cout << "Normals maked for " << fname << std::endl;
         make_normals();
-    if (fvt.size() == 0)
+    }
+    if (fvn.empty()) {
+        std::cout << "Texture maked " << fname << std::endl;
         make_texcoord();
+    }
 
     for (auto &v : fv)
         v = glm::vec3(xf * glm::vec4(v.x, v.y, v.z, 1.0f));

@@ -42,7 +42,7 @@ std::vector<SceneMaterial> sceneMaterials;
 // Gourd shader program id
 GLuint myCustomShaderProgramId;
 
-#define USE_GOURAUD 1
+#define USE_GOURAUD 0
 
 #if USE_GOURAUD
 

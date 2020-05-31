@@ -1,23 +1,14 @@
 {
+  "$schema": "../../input/scene_schema.json",
   "name": "Can scene",
   "textures": [
     {
-      "name": "sand_albedo",
-      "path": "assets/textures/3dparty/sand_albedo.png"
-    },
-    {
-      "name": "sand_normal",
-      "path": "assets/textures/3dparty/sand_normal.png"
+      "name": "checker",
+      "path": "assets/textures/checker.png"
     }
   ],
   "meshes": [
-    {
-      "name": "plane",
-      "path": "assets/meshes/plane.obj",
-      "rotate": true,
-      "uniform": false
-    },
-    {
+     {
       "name": "can",
       "path": "assets/meshes/can.obj",
       "rotate": true,
@@ -68,19 +59,6 @@
       "shininess": 32.0,
       "specular_strength": 0.5,
       "diffuse_strength": 1.0
-    },
-    {
-      "name": "sand",
-      "color": {
-        "r": 1.0,
-        "g": 1.0,
-        "b": 1.0
-      },
-      "shininess": 32.0,
-      "specular_strength": 0.5,
-      "diffuse_strength": 1.0,
-      "albedo_texture_name": "sand_albedo",
-      "normal_texture_name": "sand_normal"
     }
   ],
   "objects": [
@@ -273,25 +251,6 @@
       },
       "mesh_name": "can",
       "material_name": "mate_red"
-    },
-    {
-      "position": {
-        "x": 0,
-        "y": 0,
-        "z": 0
-      },
-      "rotation": {
-        "x": 0,
-        "y": 0,
-        "z": 0
-      },
-      "scale": {
-        "x": 1,
-        "y": 1,
-        "z": 1
-      },
-      "mesh_name": "plane",
-      "material_name": "sand"
     }
   ],
   "light": {
@@ -301,16 +260,16 @@
       "z": 4.5
     },
     "color": {
-      "r": 128,
-      "g": 128,
-      "b": 128
+      "r": 0.5,
+      "g": 0.5,
+      "b": 0.5
     }
   },
   "ambient_light": {
     "color": {
-      "r": 25,
-      "g": 25,
-      "b": 25
+      "r": 0.1,
+      "g": 0.1,
+      "b": 0.1
     }
   },
   "camera": {

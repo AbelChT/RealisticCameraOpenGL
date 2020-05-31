@@ -1,5 +1,6 @@
 {
-  "name": "Can scene",
+  "$schema": "../../input/scene_schema.json",
+  "name": "Cans with plane scene",
   "textures": [
     {
       "name": "checker",
@@ -16,7 +17,7 @@
     {
       "name": "can",
       "path": "assets/meshes/can.obj",
-      "rotate": false,
+      "rotate": true,
       "uniform": false
     }
   ],
@@ -24,26 +25,58 @@
     {
       "name": "mate_blue",
       "color": {
-        "r": 30,
-        "g": 30,
-        "b": 255
-      }
+        "r": 0.12,
+        "g": 0.12,
+        "b": 1.0
+      },
+      "shininess": 32.0,
+      "specular_strength": 0.5,
+      "diffuse_strength": 1.0
     },
     {
       "name": "mate_red",
       "color": {
-        "r": 255,
-        "g": 30,
-        "b": 30
-      }
+        "r": 1.0,
+        "g": 0.12,
+        "b": 0.12
+      },
+      "shininess": 32.0,
+      "specular_strength": 0.5,
+      "diffuse_strength": 1.0
     },
     {
       "name": "mate_green",
       "color": {
-        "r": 30,
-        "g": 255,
-        "b": 30
-      }
+        "r": 0.12,
+        "g": 1.0,
+        "b": 0.12
+      },
+      "shininess": 32.0,
+      "specular_strength": 0.5,
+      "diffuse_strength": 1.0
+    },
+    {
+      "name": "mate_green_red",
+      "color": {
+        "r": 0.7,
+        "g": 0.7,
+        "b": 0.12
+      },
+      "shininess": 32.0,
+      "specular_strength": 0.5,
+      "diffuse_strength": 1.0
+    },
+    {
+      "name": "checker",
+      "color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0
+      },
+      "shininess": 32.0,
+      "specular_strength": 0.5,
+      "diffuse_strength": 1.0,
+      "albedo_texture_name": "checker"
     }
   ],
   "objects": [
@@ -254,14 +287,26 @@
         "z": 1
       },
       "mesh_name": "plane",
-      "texture_name": "checker"
+      "material_name": "checker"
     }
   ],
   "light": {
     "position": {
-      "x": -3,
+      "x": 3,
       "y": 0,
-      "z": -4.5
+      "z": 4.5
+    },
+    "color": {
+      "r": 0.5,
+      "g": 0.5,
+      "b": 0.5
+    }
+  },
+  "ambient_light": {
+    "color": {
+      "r": 0.1,
+      "g": 0.1,
+      "b": 0.1
     }
   },
   "camera": {

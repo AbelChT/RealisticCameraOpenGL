@@ -22,7 +22,7 @@ $ cmake --build build
 Once it is compiled, the renderer can be executed using the following command from the project root:
 
 ```
-$ build/TestingOpenGL <scenePath>
+$ build/RealisticCameraOpenGL <scenePath>
 ```
 
 Where scenePath is the path of a scene (e.g assets/scene/scene_cans_with_plane.json).
@@ -37,7 +37,7 @@ The following images have been generated using the renderer and the scene assets
 Command to execute it:
 
 ```
-$ build/TestingOpenGL assets/scene/scene_cans_with_plane.json
+$ build/RealisticCameraOpenGL assets/scene/scene_cans_with_plane.json
 ```
 
 Renders obtained:

@@ -5,13 +5,8 @@ The aim of this project is to create a realistic camera model in OpenGL where th
 ### Requirements
 The following tools must be installed:
 - cmake (version 3.13 or above)
-- compiler with c++20 support (e.g gcc 9.2)
-
-The following libraries must be installed:
-- glfw3
-- glm
-- GLEW
-- libPNG
+- clang-19
+- vcpkg
 
 In addition, a version of OpenGL 4.2 or above is needed
 
@@ -19,10 +14,8 @@ In addition, a version of OpenGL 4.2 or above is needed
 The following commands must be executed in order to compile the renderer using cmake
 
 ```bash
-$ mkdir build
-$ cd build
-$ cmake ..
-$ make
+$ cmake -B build --preset default
+$ cmake --build build
 ```
 
 ## Usage instructions

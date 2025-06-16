@@ -2,6 +2,7 @@
 #include <iostream>
 #include <cstdio>
 #include <png.h>
+#include <cstdint>
 
 using namespace std;
 

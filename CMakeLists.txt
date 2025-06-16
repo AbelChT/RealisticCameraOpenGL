@@ -7,23 +7,25 @@ include(FetchContent)
 
 # Find required packages to work with OpenGL
 find_package(OpenGL REQUIRED)
-find_package(glfw3 REQUIRED)
-find_package(glm REQUIRED)
-find_package(GLEW REQUIRED)
-find_package(PNG REQUIRED)
-
-# Find packages to work with JSON
-FetchContent_Declare(json
-        GIT_REPOSITORY https://github.com/ArthurSonzogni/nlohmann_json_cmake_fetchcontent
-        GIT_TAG v3.7.3)
-
-FetchContent_GetProperties(json)
-if (NOT json_POPULATED)
-    FetchContent_Populate(json)
-    add_subdirectory(${json_SOURCE_DIR} ${json_BINARY_DIR} EXCLUDE_FROM_ALL)
-endif ()
+find_package(glfw3 CONFIG REQUIRED)
+find_package(glm CONFIG REQUIRED)
+find_package(GLEW CONFIG REQUIRED)
+find_package(PNG CONFIG REQUIRED)
+find_package(nlohmann_json CONFIG REQUIRED)
 
 # Configure project
-add_executable(TestingOpenGL OpenglUtils.cpp OpenglUtils.h main.cpp SceneRenderer.h SceneDescription.h SceneRenderer.cpp libs/obj.h libs/obj.cc libs/png.h libs/png.cc SceneDescription.cpp SceneReader.cpp SceneReader.h)
+add_executable(TestingOpenGL OpenglUtils.cpp 
+                             OpenglUtils.h 
+                             main.cpp
+                             SceneRenderer.h
+                             SceneDescription.h 
+                             SceneRenderer.cpp 
+                             libs/obj.h 
+                             libs/obj.cc 
+                             libs/png.h 
+                             libs/png.cc 
+                             SceneDescription.cpp 
+                             SceneReader.cpp 
+                             SceneReader.h)
 
-target_link_libraries(TestingOpenGL OpenGL::GL OpenGL::GLU glfw glm GLEW PNG::PNG nlohmann_json::nlohmann_json)
+target_link_libraries(TestingOpenGL PRIVATE OpenGL::GL OpenGL::GLU glfw glm::glm GLEW::GLEW PNG::PNG nlohmann_json::nlohmann_json)

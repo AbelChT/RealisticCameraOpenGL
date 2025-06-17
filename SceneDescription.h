@@ -1,231 +1,232 @@
-//
-// Created by abel on 26/4/20.
-//
+#pragma once
 
-#ifndef TESTINGOPENGL_SCENEDESCRIPTION_H
-#define TESTINGOPENGL_SCENEDESCRIPTION_H
-
-#include "libs/png.h"
+#include <png++/png.hpp>
 
 #include <vector>
 #include <glm/vec3.hpp>
 #include <optional>
 
-using namespace std;
+namespace scene_description
+{
+    // Represent an object in the scene
+    struct SceneMesh
+    {
+    public:
+        // Vertices of the scene
+        std::vector<glm::vec3> vertices;
 
-// Represent an object in the scene
-struct SceneMesh {
-public:
-    // Vertices of the scene
-    vector<glm::vec3> vertices;
+        // Normals of the scene
+        std::vector<glm::vec3> normals;
 
-    // Normals of the scene
-    vector<glm::vec3> normals;
+        // Texture positions of the scene
+        std::vector<glm::vec3> texture_positions;
 
-    // Texture positions of the scene
-    vector<glm::vec3> texture_positions;
+        // Constructors
+        SceneMesh() = default;
 
-    // Constructors
-    SceneMesh() = default;
+        SceneMesh(std::vector<glm::vec3> vertices, std::vector<glm::vec3> normals, std::vector<glm::vec3> texturePositions);
 
-    SceneMesh(vector<glm::vec3> vertices, vector<glm::vec3> normals, vector<glm::vec3> texturePositions);
+        // Default destructor
+        ~SceneMesh() = default;
+    };
 
-    // Default destructor
-    ~SceneMesh() = default;
-};
+    // Represent a camera in the scene
+    struct SceneCamera
+    {
+    public:
+        // Position of the scene camera (meters)
+        glm::vec3 position = glm::vec3(0, 0, 0);
 
+        // Look at (meters)
+        glm::vec3 lookAt = glm::vec3(0, 0, 0);
 
-// Represent a camera in the scene
-struct SceneCamera {
-public:
-    // Position of the scene camera (meters)
-    glm::vec3 position = glm::vec3(0, 0, 0);
+        // Field of view (meters)
+        float fieldOfView = 0.0f;
 
-    // Look at (meters)
-    glm::vec3 lookAt = glm::vec3(0, 0, 0);
+        // zNear (meters)
+        float zNear = 0.0f;
 
-    // Field of view (meters)
-    float fieldOfView = 0.0f;
+        // zFar (meters)
+        float zFar = 0.0f;
 
-    // zNear (meters)
-    float zNear = 0.0f;
+        // Rotation radius (meters)
+        float rotationRadius = 0.0f;
 
-    // zFar (meters)
-    float zFar = 0.0f;
+        // Constructor
+        SceneCamera() = default;
 
-    // Rotation radius (meters)
-    float rotationRadius = 0.0f;
+        SceneCamera(const glm::vec3 &position, const glm::vec3 &lookAt, float fieldOfView, float zNear, float zFar,
+                    float rotationRadius);
 
-    // Constructor
-    SceneCamera() = default;
+        // Default destructor
+        ~SceneCamera() = default;
+    };
 
-    SceneCamera(const glm::vec3 &position, const glm::vec3 &lookAt, float fieldOfView, float zNear, float zFar,
-                float rotationRadius);
+    // Parameters that define a camera in the real world
+    struct CameraDefinition
+    {
+    public:
+        // Position of the scene camera (meters)
+        glm::vec3 position = glm::vec3(0, 0, 0);
 
-    // Default destructor
-    ~SceneCamera() = default;
-};
+        // Look at position (meters)
+        glm::vec3 lookAt = glm::vec3(0, 0, 0);
 
-// Parameters that define a camera in the real world
-struct CameraDefinition {
-public:
-    // Position of the scene camera (meters)
-    glm::vec3 position = glm::vec3(0, 0, 0);
+        // Horizontal large of the film (millimeters)
+        float sensorSize = 0.0f;
 
-    // Look at position (meters)
-    glm::vec3 lookAt = glm::vec3(0, 0, 0);
+        // Distance between the lens and the film (millimeters)
+        float focalLength = 0.0f;
 
-    // Horizontal large of the film (millimeters)
-    float sensorSize = 0.0f;
+        // f-stop (units)
+        float fStop = 0.0f;
 
-    // Distance between the lens and the film (millimeters)
-    float focalLength = 0.0f;
+        // Furthest distance the camera capture (meters)
+        float zFar = 0.0f;
 
-    // f-stop (units)
-    float fStop = 0.0f;
+        // Constructor
+        CameraDefinition(const glm::vec3 &position, const glm::vec3 &lookAt, float sensorSize, float focalLength,
+                         float fStop, float zFar);
 
-    // Furthest distance the camera capture (meters)
-    float zFar = 0.0f;
+        // Default destructor
+        ~CameraDefinition() = default;
+    };
 
-    // Constructor
-    CameraDefinition(const glm::vec3 &position, const glm::vec3 &lookAt, float sensorSize, float focalLength,
-                     float fStop, float zFar);
+    // Represent a light in the scene
+    struct SceneLight
+    {
+    public:
+        // Position of the scene light (meters)
+        glm::vec3 position = glm::vec3(0, 0, 0);
 
-    // Default destructor
-    ~CameraDefinition() = default;
-};
+        // Intensity in each of the components of the scene light (range [0,1])
+        glm::vec3 color = glm::vec3(0.5, 0.5, 0.5);
 
-// Represent a light in the scene
-struct SceneLight {
-public:
-    // Position of the scene light (meters)
-    glm::vec3 position = glm::vec3(0, 0, 0);
+        // Constructor
+        SceneLight() = default;
 
-    // Intensity in each of the components of the scene light (range [0,1])
-    glm::vec3 color = glm::vec3(0.5, 0.5, 0.5);
+        SceneLight(const glm::vec3 &position, const glm::vec3 &color);
 
-    // Constructor
-    SceneLight() = default;
+        // Default destructor
+        ~SceneLight() = default;
+    };
 
-    SceneLight(const glm::vec3 &position, const glm::vec3 &color);
+    // Represent the ambient light in the scene
+    struct AmbientLight
+    {
+    public:
+        // Intensity in each of the components of the ambient scene light RGB (range [0,1])
+        glm::vec3 color = glm::vec3(0, 0, 0);
 
-    // Default destructor
-    ~SceneLight() = default;
-};
+        // Constructor
+        AmbientLight() = default;
 
-// Represent the ambient light in the scene
-struct AmbientLight {
-public:
-    // Intensity in each of the components of the ambient scene light RGB (range [0,1])
-    glm::vec3 color = glm::vec3(0, 0, 0);
+        explicit AmbientLight(const glm::vec3 &color);
 
-    // Constructor
-    AmbientLight() = default;
+        // Default destructor
+        ~AmbientLight() = default;
+    };
 
-    explicit AmbientLight(const glm::vec3 &color);
+    // Represent a material in the scene
+    struct SceneMaterial
+    {
+    public:
+        // Intensity in each of the components of the material color RGB (range [0,1])
+        glm::vec3 color = glm::vec3(0, 0, 0);
 
-    // Default destructor
-    ~AmbientLight() = default;
-};
+        // Shininess of the material (32 is a good value)
+        float shininess = 32.0f;
 
-// Represent a material in the scene
-struct SceneMaterial {
-public:
-    // Intensity in each of the components of the material color RGB (range [0,1])
-    glm::vec3 color = glm::vec3(0, 0, 0);
+        // Specular strength of the material (values in the range [0, 1])
+        float specularStrength = 0.5f;
 
-    // Shininess of the material (32 is a good value)
-    float shininess = 32.0f;
+        // Diffuse strength of the material (values in the range [0, 1])
+        float diffuseStrength = 1.0f;
 
-    // Specular strength of the material (values in the range [0, 1])
-    float specularStrength = 0.5f;
+        // Albedo texture index of the material
+        std::optional<unsigned int> albedoTextureIndex = {};
 
-    // Diffuse strength of the material (values in the range [0, 1])
-    float diffuseStrength = 1.0f;
+        // Normal texture index of the material
+        std::optional<unsigned int> normalTextureIndex = {};
 
-    // Albedo texture index of the material
-    std::optional<unsigned int> albedoTextureIndex = {};
+        // Constructor
+        SceneMaterial() = default;
 
-    // Normal texture index of the material
-    std::optional<unsigned int> normalTextureIndex = {};
+        SceneMaterial(const glm::vec3 &color, float shininess, float specularStrength, float diffuseStrength,
+                      const std::optional<unsigned int> &albedoTextureIndex, const std::optional<unsigned int> &normalTextureIndex);
 
-    // Constructor
-    SceneMaterial() = default;
+        // Default destructor
+        ~SceneMaterial() = default;
+    };
 
-    SceneMaterial(const glm::vec3 &color, float shininess, float specularStrength, float diffuseStrength,
-                  const optional<unsigned int> &albedoTextureIndex, const optional<unsigned int> &normalTextureIndex);
+    // Represent a object in the scene
+    struct ObjectDescription
+    {
+    public:
+        // Transformation order translate-rotate-scale
+        // Position of the object (meters)
+        glm::vec3 position = glm::vec3(0, 0, 0);
 
-    // Default destructor
-    ~SceneMaterial() = default;
-};
+        // Rotation of the object (radians). Order rotation in x, rotation in y, rotation in z
+        glm::vec3 rotation = glm::vec3(0, 0, 0);
 
-// Represent a object in the scene
-struct ObjectDescription {
-public:
-    // Transformation order translate-rotate-scale
-    // Position of the object (meters)
-    glm::vec3 position = glm::vec3(0, 0, 0);
+        // Scale of the object
+        glm::vec3 scale = glm::vec3(0, 0, 0);
 
-    // Rotation of the object (radians). Order rotation in x, rotation in y, rotation in z
-    glm::vec3 rotation = glm::vec3(0, 0, 0);
+        // Material index of the object
+        unsigned int materialIndex = 0;
 
-    // Scale of the object
-    glm::vec3 scale = glm::vec3(0, 0, 0);
+        // Mesh index of the object
+        unsigned int meshIndex = 0;
 
-    // Material index of the object
-    unsigned int materialIndex = 0;
+        // Constructor
+        ObjectDescription() = default;
 
-    // Mesh index of the object
-    unsigned int meshIndex = 0;
+        ObjectDescription(const glm::vec3 &position, const glm::vec3 &rotation, const glm::vec3 &scale,
+                          unsigned int materialIndex, unsigned int meshIndex);
 
-    // Constructor
-    ObjectDescription() = default;
+        // Default destructor
+        ~ObjectDescription() = default;
+    };
 
-    ObjectDescription(const glm::vec3 &position, const glm::vec3 &rotation, const glm::vec3 &scale,
-                      unsigned int materialIndex, unsigned int meshIndex);
+    // Description of the scene
+    struct SceneDescription
+    {
+    public:
+        // Meshes in the scene
+        std::vector<SceneMesh> meshes;
 
-    // Default destructor
-    ~ObjectDescription() = default;
-};
+        // Textures in the scene
+        std::vector<png::image<png::rgb_pixel>> textures;
 
-// Description of the scene
-struct SceneDescription {
-public:
-    // Meshes in the scene
-    vector<SceneMesh> meshes;
+        // Materials in the scene
+        std::vector<SceneMaterial> materials;
 
-    // Textures in the scene
-    vector<PNG> textures;
+        // Objects in the scene
+        std::vector<ObjectDescription> objects;
 
-    // Materials in the scene
-    vector<SceneMaterial> materials;
+        // Light in the scene (only one from now)
+        SceneLight light;
 
-    // Objects in the scene
-    vector<ObjectDescription> objects;
+        // Ambient light in the scene
+        AmbientLight ambientLight;
 
-    // Light in the scene (only one from now)
-    SceneLight light;
+        // Camera in the scene
+        SceneCamera camera;
 
-    // Ambient light in the scene
-    AmbientLight ambientLight;
+        // Constructor
+        SceneDescription(std::vector<SceneMesh> meshes, std::vector<png::image<png::rgb_pixel>> textures,
+                         std::vector<SceneMaterial> materials, std::vector<ObjectDescription> objects,
+                         const SceneLight &light, const AmbientLight &ambientLight, const SceneCamera &camera);
 
-    // Camera in the scene
-    SceneCamera camera;
+        // Default destructor
+        ~SceneDescription() = default;
+    };
 
-    // Constructor
-    SceneDescription(vector<SceneMesh> meshes, vector<PNG> textures,
-                     vector<SceneMaterial> materials, vector<ObjectDescription> objects,
-                     const SceneLight &light, const AmbientLight &ambientLight, const SceneCamera &camera);
-
-    // Default destructor
-    ~SceneDescription() = default;
-};
-
-/**
- * Transform a camera definition to a sceneCamera
- * @param cameraDefinition
- * @return
- */
-SceneCamera cameraDefinitionToSceneCamera(CameraDefinition cameraDefinition);
-
-#endif //TESTINGOPENGL_SCENEDESCRIPTION_H
+    /**
+     * Transform a camera definition to a sceneCamera
+     * @param cameraDefinition
+     * @return
+     */
+    SceneCamera cameraDefinitionToSceneCamera(CameraDefinition cameraDefinition);
+}

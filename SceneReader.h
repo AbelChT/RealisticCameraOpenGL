@@ -1,14 +1,11 @@
-//
-// Created by abel on 22/5/20.
-//
-
-#ifndef TESTINGOPENGL_SCENEREADER_H
-#define TESTINGOPENGL_SCENEREADER_H
+#pragma once
 
 #include "SceneDescription.h"
+
 #include <string>
 #include <optional>
 
-std::optional<SceneDescription> readScene(const std::string &sceneName);
-
-#endif //TESTINGOPENGL_SCENEREADER_H
+namespace scene_reader
+{
+    std::optional<scene_description::SceneDescription> readScene(const std::string &sceneName);
+}
